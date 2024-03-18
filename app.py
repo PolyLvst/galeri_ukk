@@ -42,10 +42,10 @@ table_photos = db.photos
 # JWT Token exp
 Expired_Seconds = 60 * 60 * 24 # 24 Hour / 86400 seconds
 allowed_ext = {'png', 'jpg', 'jpeg', 'gif'}
-# Filter file yang diterima
-def not_allowed_file(filename:str):
-    # Mencari titik terakhir pada filename lalu ambil index terakhirnya dan cek dengan ekstensi yg boleh
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_ext
+# Filter extensi file yang diterima
+def check_ext(extension:str):
+    # Cek dengan ekstensi yg boleh
+    return True if extension in allowed_ext else False
 
 # Login ke github dengan token yang didapat dari github settings developer
 def login_github():
@@ -61,6 +61,14 @@ def upload_file_or_update(path:str,message:str,content:Union[str,bytes],update=F
         repo.update_file(path=contents.path, message=message, content=content, sha=contents.sha, branch=branch)
     else:
         repo.create_file(path=path,message=message,content=content,branch=branch)
+    g.close()
+
+# Delete file github storage
+def delete_file_from_storage(path:str,message:str,branch:str="main"):
+    g = login_github()
+    repo = g.get_repo(StorageRepo)
+    contents = repo.get_contents(path)
+    repo.delete_file(path=contents.path, message=message, sha=contents.sha, branch=branch)
     g.close()
 
 # Jika baru pertama kali menjalankan kita harus cek dulu apakah folder sudah lengkap
@@ -81,7 +89,8 @@ def home():
     try:
         # Buka konten cookie
         payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
-        return render_template('index.html')
+        # Payload terverifikasi
+        pass
     except jwt.ExpiredSignatureError:
         # Sesinya sudah lewat dari 24 Jam
         msg = 'Your session has expired'
@@ -90,13 +99,32 @@ def home():
         # Tidak ada token
         msg = 'Something wrong happens'
         return redirect(url_for('login_fn',msg=msg))
+    # Jika payload terverifikasi maka kode dibawah akan di execute
+    return render_template('index.html')
 
 # Endpoint ambil path images
 @app.get("/api/images") # Optional args skip and limit, contoh : /api/images?skip=0&limit=10
 def get_images():
+    # Ambil cookie
+    token_receive = request.cookies.get(TOKEN)
+    try:
+        # Buka konten cookie
+        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        # Payload terverifikasi
+        pass
+    except jwt.ExpiredSignatureError:
+        # Sesinya sudah lewat dari 24 Jam
+        msg = 'Your session has expired'
+        return redirect(url_for('login_fn',msg=msg))
+    except jwt.exceptions.DecodeError:
+        # Tidak ada token
+        msg = 'Something wrong happens'
+        return redirect(url_for('login_fn',msg=msg))
+    # Jika payload terverifikasi maka kode dibawah akan di execute
     skip = int(request.args.get("skip",default=0))
     limit = int(request.args.get("limit",default=20))
-    photos = list(table_photos.find({},{'_id':False}).skip(skip=skip).limit(limit=limit))
+    # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
+    photos = list(table_photos.find({},{'_id':False}).sort("_id",-1).skip(skip=skip).limit(limit=limit))
     return jsonify({"data":photos})
 
 @app.post("/api/images/create")
@@ -106,42 +134,106 @@ def create_images():
     try:
         # Lihat isi cookie
         payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
-        username = payload['id']
-        # Cek jika file telah terupload
-        if 'file_give' in request.files:
-            file = request.files['file_give']
-            # Amankan filename dari karakter spesial
-            filename = secure_filename(file.filename)
-            extension = filename.split('.')[-1]
-            unique_format = f"{username}-{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}.{extension}"
-            file_path = f"photos/{unique_format}"
-            file_save_path = f"./static/temp/{file_path}"
-            # Cek apakah folder tersedia
-            check_folders()
-            # Simpan file ke folder temp
-            file.save(file_save_path)
-            
-            # Open file sebagai binary
-            with open(file_save_path, "rb") as image:
-                f = image.read()
-                image_data = bytearray(f)
-                # Upload ke github storage
-                upload_file_or_update(file_path,f"By {username}",bytes(image_data))
-            # Delete temp file
-            os.remove(file_save_path)
-            doc = {
-                "username": username,
-                "image": StorageURL+file_path,
-            }
-            # Masukkan url ke database
-            table_photos.insert_one(doc)
-            return {"msg":"Photo uploaded"}
-        else:
-            # Foto tidak terupload
-            return {"msg":"No image uploaded"}
+        username = payload['username']
+        # Payload terverifikasi
+        pass
     except (jwt.ExpiredSignatureError,jwt.exceptions.DecodeError):
         # Tidak ada token atau belum login
         return redirect(url_for('home'))
+    # Jika payload terverifikasi maka kode dibawah akan di execute
+    # Cek jika file telah terupload
+    if 'file_give' in request.files:
+        file = request.files['file_give']
+        # Amankan filename dari karakter spesial
+        filename = secure_filename(file.filename)
+        extension = os.path.splitext(filename)[-1].replace('.','')
+        if not check_ext(extension):
+            return jsonify({"msg":"Extension not allowed"})
+        unique_format = f"{username}-{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}.{extension}"
+        file_path = f"photos/{unique_format}"
+        file_save_path = f"./static/temp/{file_path}"
+        # Cek apakah folder tersedia
+        check_folders()
+        # Simpan file ke folder temp
+        file.save(file_save_path)
+        
+        # Open file sebagai binary
+        with open(file_save_path, "rb") as image:
+            f = image.read()
+            image_data = bytearray(f)
+            # Upload ke github storage
+            upload_file_or_update(file_path,f"By {username}",bytes(image_data))
+        # Delete temp file
+        os.remove(file_save_path)
+        doc = {
+            "username": username,
+            "image": StorageURL+file_path,
+            "image_repo": file_path,
+        }
+        # Masukkan url ke database
+        table_photos.insert_one(doc)
+        return {"msg":"Photo uploaded"}
+    else:
+        # Foto tidak terupload
+        return {"msg":"No image uploaded"}
+
+@app.put("/api/profile/image")
+def update_profile_image():
+    # Ambil cookie
+    token_receive = request.cookies.get(TOKEN)
+    try:
+        # Buka konten cookie
+        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        username = payload["username"]
+        pass
+    except jwt.ExpiredSignatureError:
+        # Sesinya sudah lewat dari 24 Jam
+        msg = 'Your session has expired'
+        return redirect(url_for('login_fn',msg=msg))
+    except jwt.exceptions.DecodeError:
+        # Tidak ada token
+        msg = 'Something wrong happens'
+        return redirect(url_for('login_fn',msg=msg))
+    # Jika payload terverifikasi maka kode dibawah akan di execute
+    # Cek jika file telah terupload
+    if 'file_give' in request.files:
+        file = request.files['file_give']
+        # Amankan filename dari karakter spesial
+        filename = secure_filename(file.filename)
+        extension = os.path.splitext(filename)[-1].replace('.','')
+        
+        if not check_ext(extension):
+            return jsonify({"msg":"Extension not allowed"})
+        
+        # Get current user profile pic
+        current_data = table_users.find_one({"username":username},{"_id":False})
+        current_data_profile_pic = current_data.get("profile_pic_repo")
+        
+        unique_format = f"{username}-{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}.{extension}"
+        file_path = f"profile_pics/{unique_format}"
+        file_save_path = f"./static/temp/{file_path}"
+        # Cek apakah folder tersedia
+        check_folders()
+        # Simpan file ke folder temp
+        file.save(file_save_path)
+        
+        # Open file sebagai binary
+        with open(file_save_path, "rb") as image:
+            f = image.read()
+            image_data = bytearray(f)
+            delete_file_from_storage(current_data_profile_pic,f"Delete By {username}")
+            # Upload ke github storage
+            upload_file_or_update(file_path,f"By {username}",bytes(image_data))
+        # Delete temp file
+        os.remove(file_save_path)
+        doc = {"profile_pic": StorageURL+file_path,"profile_pic_repo":file_path}
+        # Masukkan url ke database
+        # $set adalah cara mongodb mengupdate suatu document dalam table
+        table_users.update_one(filter={"username":username},update={"$set":doc})
+        return {"msg":"Photo uploaded"}
+    else:
+        # Foto tidak terupload
+        return {"msg":"No image uploaded"}
 
 # Login page
 @app.get("/login")
@@ -152,7 +244,7 @@ def login_fn():
 @app.post('/api/sign_up')
 def sign_up():
     # Default foto profil untuk user
-    default_profile_pic = StorageURL+"profile_pics/default.png"
+    default_profile_pic = "./static/defaults/default-profile-pic.png"
     username_receive = request.form.get('username_give')
     password_receive = request.form.get('password_give')
     bio_receive = request.form.get('bio_give')
@@ -195,7 +287,7 @@ def sign_in():
         })
     # Buat isi token
     payload={
-        "id":username_receive,
+        "username":username_receive,
         "exp": datetime.now() + timedelta (seconds=Expired_Seconds),
     }
     # Buat token lalu encode
