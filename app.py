@@ -102,6 +102,10 @@ def home():
     # Jika payload terverifikasi maka kode dibawah akan di execute
     return render_template('index.html')
 
+@app.get("/about")
+def about_page():
+    return render_template("about.html")
+
 # Endpoint ambil path images
 @app.get("/api/images") # Optional args skip and limit, contoh : /api/images?skip=0&limit=10
 def get_images():
