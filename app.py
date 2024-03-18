@@ -31,5 +31,25 @@ def home():
 def create_images():
     pass
 
+@app.get("/login")
+def login():
+    msg = request.args.get("msg")
+    return render_template("login.html", msg=msg)
+
+@app.post("/sign_in")
+def sign_in():
+    username_receive = request.form.get('username_give')
+    password_receive = request.form.get('password_give')
+    is_correct_username = secrets.compare_digest(nama, username_receive)
+    is_correct_password = secrets.compare_digest(password, password_receive)
+    if not is_correct_username or not is_correct_password:
+        return jsonify({
+            "result":"fail", "msg":"Cannot find user with that username and password combination",
+        })
+    payload={
+        "id":username_receive,
+        "exp": datetime.utcnow() + timedelta (seconds=Expired__Seconds),
+    }
+
 if __name__ == "__main__":
     app.run("0.0.0.0",5000,True)
