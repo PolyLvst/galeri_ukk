@@ -15,6 +15,12 @@ db_config = {
     "password": "",
     "database": "galeri_ukk"
 }
+# JWT Token exp
+Expired_Seconds = 60 * 60 * 24 # 24 Hour / 86400 seconds
+allowed_ext = {'png', 'jpg', 'jpeg', 'gif'}
+def not_allowed_file(filename:str):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_ext
+
 def connect_db():
     try:
         conn = mysql.connector.connect(**db_config)
@@ -23,9 +29,24 @@ def connect_db():
         exit()
     cursor = conn.cursor()
     return cursor,conn
+
 @app.get("/")
 def home():
     return render_template("index.html")
+
+# Endpoint ambil path images
+@app.get("/images/")
+def get_images():
+    curr,conn = connect_db()
+    sql = "SELECT * FROM photos"
+    curr.execute(sql)
+    data = curr.fetchall()
+    curr.close()
+    conn.close()
+    response = [{"id":i[0],
+                 "foto_path":i[1],
+                 "user_id":i[2]} for i in data]
+    return response
 
 @app.post("/images/create")
 def create_images():
