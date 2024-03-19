@@ -154,6 +154,30 @@ def home():
     # Jika payload terverifikasi maka kode dibawah akan di execute
     return render_template('index.html')
 
+@app.get("/api/search")
+def search():
+    query = request.form.get('query', '')
+    gallery_data = list(table_photos.find({},{"_id":False}))
+    results = []
+    for image in gallery_data:
+        # Jika title terdapat unsur query
+        if query.lower() in image['title'].lower():
+            # Tambahkan ke result
+            results.append(image)
+        # Jika kategori terdapat unsur query
+        elif query.lower() in image['kategori'].lower():
+            # Tambahkan ke result
+            results.append(image)
+        # Jika deskripsi terdapat unsur query
+        elif query.lower() in image['deskripsi'].lower():
+            # Tambahkan ke result
+            results.append(image)
+        # Jika username terdapat unsur query
+        elif query.lower() in image['username'].lower():
+            # Tambahkan ke result
+            results.append(image)
+    return jsonify({"results":results})
+
 @app.get("/about")
 def about_page():
     return render_template("about.html")
