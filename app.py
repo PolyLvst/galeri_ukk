@@ -1,4 +1,5 @@
 from typing import Union
+from bson import ObjectId
 from flask import Flask, redirect,render_template,jsonify,request,send_file, url_for
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
@@ -102,6 +103,10 @@ def home():
     # Jika payload terverifikasi maka kode dibawah akan di execute
     return render_template('index.html')
 
+@app.get("/about")
+def about_page():
+    return render_template("about.html")
+
 # Endpoint ambil path images
 @app.get("/api/images") # Optional args skip and limit, contoh : /api/images?skip=0&limit=10
 def get_images():
@@ -124,7 +129,11 @@ def get_images():
     skip = int(request.args.get("skip",default=0))
     limit = int(request.args.get("limit",default=20))
     # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
-    photos = list(table_photos.find({},{'_id':False}).sort("_id",-1).skip(skip=skip).limit(limit=limit))
+    photos = list(table_photos.find({}).sort("_id",-1).skip(skip=skip).limit(limit=limit))
+    idx = 0
+    for doc in photos:
+        photos[idx]["_id"] = str(doc["_id"])
+        idx += 1
     return jsonify({"data":photos})
 
 @app.post("/api/images/create")
@@ -148,7 +157,7 @@ def create_images():
         filename = secure_filename(file.filename)
         extension = os.path.splitext(filename)[-1].replace('.','')
         if not check_ext(extension):
-            return jsonify({"msg":"Extension not allowed"})
+            return jsonify({"msg":"Extension not allowed"}),406 # Not acceptable
         unique_format = f"{username}-{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}.{extension}"
         file_path = f"photos/{unique_format}"
         file_save_path = f"./static/temp/{file_path}"
@@ -175,7 +184,35 @@ def create_images():
         return {"msg":"Photo uploaded"}
     else:
         # Foto tidak terupload
-        return {"msg":"No image uploaded"}
+        return {"msg":"No image uploaded"},404 # Not found
+
+@app.delete("/api/images/delete")
+def delete_images():
+    # Ambil cookie file
+    token_receive = request.cookies.get(TOKEN)
+    try:
+        # Lihat isi cookie
+        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        username = payload['username']
+        # Payload terverifikasi
+        pass
+    except (jwt.ExpiredSignatureError,jwt.exceptions.DecodeError):
+        # Tidak ada token atau belum login
+        return redirect(url_for('home'))
+    # Jika payload terverifikasi maka kode dibawah akan di execute
+    image_id = request.form.get("image_id_give")
+    # Ambil data dari database
+    result = table_photos.find_one({"_id":ObjectId(image_id)})
+    if not result:
+        return jsonify({"msg":"Image not found"}),404 # Not found
+    # Jika owner foto tersebut berbeda maka tidak akan di hapus
+    if result.get("username") != username:
+        return jsonify({"msg":"Image owner is different"}),403 # Forbidden
+    # Delete dari github storage
+    delete_file_from_storage(result.get("image_repo"),f"Delete By {username}")
+    # Delete dari mongodb
+    table_photos.delete_one({"_id":ObjectId(image_id)})
+    return jsonify({"msg":"Image deleted"})
 
 @app.put("/api/profile/image")
 def update_profile_image():
@@ -203,7 +240,7 @@ def update_profile_image():
         extension = os.path.splitext(filename)[-1].replace('.','')
         
         if not check_ext(extension):
-            return jsonify({"msg":"Extension not allowed"})
+            return jsonify({"msg":"Extension not allowed"}),406 # Not acceptable
         
         # Get current user profile pic
         current_data = table_users.find_one({"username":username},{"_id":False})
@@ -233,7 +270,7 @@ def update_profile_image():
         return {"msg":"Photo uploaded"}
     else:
         # Foto tidak terupload
-        return {"msg":"No image uploaded"}
+        return {"msg":"No image uploaded"},404 # Not found
 
 # Login page
 @app.get("/login")
@@ -251,7 +288,7 @@ def sign_up():
     # Cek apakah username telah dipakai
     user_from_db = table_users.find_one({"username":username_receive})
     if user_from_db:
-        return jsonify({"msg":"username telah dipakai"})
+        return jsonify({"msg":"username telah dipakai"}),409 # Conflict
     # Hash password
     password_hash = hashlib.sha256(password_receive.encode('utf-8')).hexdigest()
     # Salt password agar lebih aman
@@ -284,7 +321,7 @@ def sign_in():
         # Login salah
         return jsonify({
             "result":"fail", "msg":"Cannot find user with that username and password combination",
-        })
+        }),404 # Not found
     # Buat isi token
     payload={
         "username":username_receive,
