@@ -107,6 +107,60 @@ def home():
 def about_page():
     return render_template("about.html")
 
+# Get info dari token tentang user
+@app.get("/api/me")
+def get_info_me():
+    # Ambil cookie
+    token_receive = request.cookies.get(TOKEN)
+    try:
+        # Buka konten cookie
+        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        username = payload['username']
+        # Payload terverifikasi
+        pass
+    except jwt.ExpiredSignatureError:
+        # Sesinya sudah lewat dari 24 Jam
+        msg = 'Your session has expired'
+        return redirect(url_for('login_fn',msg=msg))
+    except jwt.exceptions.DecodeError:
+        # Tidak ada token
+        msg = 'Something wrong happens'
+        return redirect(url_for('login_fn',msg=msg))
+    # Jika payload terverifikasi maka kode dibawah akan di execute
+    # Exclude password
+    user = table_users.find_one({"username":username},{"password":False})
+    user["_id"] = str(user["_id"])
+    return jsonify({"data":user})
+
+# Update user info, bio, gender ...
+@app.put("/api/me")
+def update_info_me():
+    # Ambil cookie
+    token_receive = request.cookies.get(TOKEN)
+    try:
+        # Buka konten cookie
+        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        username = payload['username']
+        # Payload terverifikasi
+        pass
+    except jwt.ExpiredSignatureError:
+        # Sesinya sudah lewat dari 24 Jam
+        msg = 'Your session has expired'
+        return redirect(url_for('login_fn',msg=msg))
+    except jwt.exceptions.DecodeError:
+        # Tidak ada token
+        msg = 'Something wrong happens'
+        return redirect(url_for('login_fn',msg=msg))
+    # Jika payload terverifikasi maka kode dibawah akan di execute
+    bio_receive = request.form.get('bio_give')
+    gender_receive = request.form.get('gender_give')
+    new_doc = {
+        "bio": bio_receive,
+        "gender": gender_receive,
+    }
+    table_users.update_one({"username":username},{"$set":new_doc})
+    return jsonify({"msg":"Item updated"})
+    
 # Endpoint ambil path images
 @app.get("/api/images") # Optional args skip and limit, contoh : /api/images?skip=0&limit=10
 def get_images():
@@ -136,6 +190,37 @@ def get_images():
         idx += 1
     return jsonify({"data":photos})
 
+# Endpoint ambil path images by me
+@app.get("/api/images/me") # Optional args skip and limit, contoh : /api/images?skip=0&limit=10
+def get_images_me():
+    # Ambil cookie
+    token_receive = request.cookies.get(TOKEN)
+    try:
+        # Buka konten cookie
+        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        username = payload["username"]
+        # Payload terverifikasi
+        pass
+    except jwt.ExpiredSignatureError:
+        # Sesinya sudah lewat dari 24 Jam
+        msg = 'Your session has expired'
+        return redirect(url_for('login_fn',msg=msg))
+    except jwt.exceptions.DecodeError:
+        # Tidak ada token
+        msg = 'Something wrong happens'
+        return redirect(url_for('login_fn',msg=msg))
+    # Jika payload terverifikasi maka kode dibawah akan di execute
+    skip = int(request.args.get("skip",default=0))
+    limit = int(request.args.get("limit",default=20))
+    # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
+    photos = list(table_photos.find({"username":username}).sort("_id",-1).skip(skip=skip).limit(limit=limit))
+    idx = 0
+    for doc in photos:
+        photos[idx]["_id"] = str(doc["_id"])
+        idx += 1
+    return jsonify({"data":photos})
+
+# Endpoint tambah foto
 @app.post("/api/images/create")
 def create_images():
     # Ambil cookie file
@@ -186,6 +271,7 @@ def create_images():
         # Foto tidak terupload
         return {"msg":"No image uploaded"},404 # Not found
 
+# Endpoint delete foto
 @app.delete("/api/images/delete")
 def delete_images():
     # Ambil cookie file
@@ -214,6 +300,7 @@ def delete_images():
     table_photos.delete_one({"_id":ObjectId(image_id)})
     return jsonify({"msg":"Image deleted"})
 
+# Endpoint update foto profil
 @app.put("/api/profile/image")
 def update_profile_image():
     # Ambil cookie
@@ -278,13 +365,13 @@ def login_fn():
     msg = request.args.get("msg")
     return render_template("login.html", msg=msg)
 
+# Endpoint registrasi
 @app.post('/api/sign_up')
 def sign_up():
     # Default foto profil untuk user
     default_profile_pic = "./static/defaults/default-profile-pic.png"
     username_receive = request.form.get('username_give')
     password_receive = request.form.get('password_give')
-    bio_receive = request.form.get('bio_give')
     # Cek apakah username telah dipakai
     user_from_db = table_users.find_one({"username":username_receive})
     if user_from_db:
@@ -296,8 +383,9 @@ def sign_up():
     doc = {
         "username": username_receive,
         "password": salted_password,
-        "bio": bio_receive,
+        "bio": "Hello this is my bio",
         "profile_pic": default_profile_pic,
+        "gender": "N/A",
     }
     # Masukkan ke database
     table_users.insert_one(doc)
