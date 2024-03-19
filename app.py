@@ -313,6 +313,10 @@ def create_images():
     # Cek jika file telah terupload
     if 'file_give' in request.files:
         file = request.files['file_give']
+        title_receive = request.form.get("title_give","")
+        deskripsi_receive = request.form.get("deskripsi_give","")
+        kategori_receive = request.form.get("kategori_give","")
+
         # Amankan filename dari karakter spesial
         filename = secure_filename(file.filename)
         extension = os.path.splitext(filename)[-1].replace('.','')
@@ -356,6 +360,9 @@ def create_images():
             "image_repo": file_path,
             "image_thumbnail": StorageURL+thumbnail_path,
             "image_thumbnail_repo": thumbnail_path,
+            "title_receive": title_receive,
+            "deskripsi_receive": deskripsi_receive,
+            "kategori_receive": kategori_receive,
         }
         # Masukkan url ke database
         table_photos.insert_one(doc)
