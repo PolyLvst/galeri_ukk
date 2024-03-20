@@ -17,3 +17,9 @@ color: rgba(53, 86, 108, 1);
     color: rgba(8, 65, 104, 1);
     font-weight: 500;
 }
+.container-masonry{
+    margin:0 auto;
+}
+.width-image{
+    width: 200px;
+}

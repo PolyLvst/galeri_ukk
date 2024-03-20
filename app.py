@@ -1,3 +1,5 @@
+import random
+import string
 from typing import Union
 from bson import ObjectId
 from flask import Flask, redirect,render_template,jsonify,request,send_file, url_for
@@ -24,9 +26,13 @@ GH_PW = os.environ.get("GH_PW")
 GH_TOKEN = os.environ.get("GH_TOKEN")
 TOKEN = 'token'
 
+IMAGES_THUMBNAIL_SIZE = (300,300)
+
 # using an access token
 StorageRepo = "ambatron-dev/storage-ukk"
 StorageURL = "https://ambatron-dev.github.io/storage-ukk/"
+# Default foto profil untuk user
+default_profile_pic = "./static/defaults/default-profile-pic.png"
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -72,6 +78,19 @@ def delete_file_from_storage(path:str,message:str,branch:str="main"):
     repo.delete_file(path=contents.path, message=message, sha=contents.sha, branch=branch)
     g.close()
 
+# Generate thumbnail
+def generate_thumbnail(input_image_path, output_thumbnail_path, thumbnail_size=(300, 300)):
+    try:
+        # Open the image file
+        image = Image.open(input_image_path)
+        # Generate the thumbnail
+        image.thumbnail(thumbnail_size)
+        # Save the thumbnail to the output path
+        image.save(output_thumbnail_path)
+        print(f"Thumbnail generated and saved to '{output_thumbnail_path}'")
+    except Exception as e:
+        print("Error generating thumbnail:", e)
+
 # Jika baru pertama kali menjalankan kita harus cek dulu apakah folder sudah lengkap
 def check_folders():
     print("Checking folders ... ")
@@ -80,6 +99,38 @@ def check_folders():
         if not os.path.exists(path=path):
             # Buat folder jika tidak ada
             os.makedirs(name=path)
+            
+def generate_password(length=12):
+    characters = string.ascii_letters + string.digits + string.punctuation
+    password = ''.join(random.choice(characters) for _ in range(length))
+    return password
+
+def hash_salt_password(password:str):
+    # Hash password
+    password_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
+    # Salt password agar lebih aman
+    salted_password = SALT_HASH+password_hash
+    return salted_password
+
+# Jika database tidak ada user superadmin
+def check_superadmin():
+    superadmin = table_users.find_one({"is_superadmin":True})
+    if not superadmin:
+        pw = generate_password(length=31)
+        salted_password = hash_salt_password(pw)
+        doc = {
+            "username":"helios-ruler",
+            "password":salted_password,
+            "bio": "I'am the ruler of the world",
+            "profile_pic": default_profile_pic,
+            "gender": "N/A",
+            "is_superadmin": True,
+        }
+        table_users.insert_one(doc)
+        print(f"# ------------------ #")
+        print(f"# Generated superadmin")
+        print(f"# User : helios-ruler")
+        print(f"# Password : {pw}")
 
 # -------------- ENDPOINT -------------- #
 
@@ -101,7 +152,39 @@ def home():
         msg = 'Something wrong happens'
         return redirect(url_for('login_fn',msg=msg))
     # Jika payload terverifikasi maka kode dibawah akan di execute
-    return render_template('index.html')
+    skip = int(request.args.get("skip",default=0))
+    limit = int(request.args.get("limit",default=20))
+    # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
+    photos = list(table_photos.find({}).sort("_id",-1).skip(skip=skip).limit(limit=limit))
+    idx = 0
+    for doc in photos:
+        photos[idx]["_id"] = str(doc["_id"])
+        idx += 1
+    return render_template('index.html',images=photos)
+
+@app.get("/api/search")
+def search():
+    query = request.form.get('query', '')
+    gallery_data = list(table_photos.find({},{"_id":False}))
+    results = []
+    for image in gallery_data:
+        # Jika title terdapat unsur query
+        if query.lower() in image['title'].lower():
+            # Tambahkan ke result
+            results.append(image)
+        # Jika kategori terdapat unsur query
+        elif query.lower() in image['kategori'].lower():
+            # Tambahkan ke result
+            results.append(image)
+        # Jika deskripsi terdapat unsur query
+        elif query.lower() in image['deskripsi'].lower():
+            # Tambahkan ke result
+            results.append(image)
+        # Jika username terdapat unsur query
+        elif query.lower() in image['username'].lower():
+            # Tambahkan ke result
+            results.append(image)
+    return jsonify({"results":results})
 
 @app.get("/blog")
 def blog():
@@ -258,6 +341,10 @@ def create_images():
     # Cek jika file telah terupload
     if 'file_give' in request.files:
         file = request.files['file_give']
+        title_receive = request.form.get("title_give","")
+        deskripsi_receive = request.form.get("deskripsi_give","")
+        kategori_receive = request.form.get("kategori_give","")
+
         # Amankan filename dari karakter spesial
         filename = secure_filename(file.filename)
         extension = os.path.splitext(filename)[-1].replace('.','')
@@ -266,10 +353,17 @@ def create_images():
         unique_format = f"{username}-{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}.{extension}"
         file_path = f"photos/{unique_format}"
         file_save_path = f"./static/temp/{file_path}"
+
         # Cek apakah folder tersedia
         check_folders()
         # Simpan file ke folder temp
         file.save(file_save_path)
+
+        # Thumbnail
+        thumbnail_unique_format = f"thumbnail_{unique_format}"
+        thumbnail_path = f"photos/{thumbnail_unique_format}"
+        file_save_path_thumbnail = f"./static/temp/{thumbnail_path}"
+        generate_thumbnail(input_image_path=file_save_path,output_thumbnail_path=file_save_path_thumbnail,thumbnail_size=IMAGES_THUMBNAIL_SIZE)
         
         # Open file sebagai binary
         with open(file_save_path, "rb") as image:
@@ -277,12 +371,26 @@ def create_images():
             image_data = bytearray(f)
             # Upload ke github storage
             upload_file_or_update(file_path,f"By {username}",bytes(image_data))
+
+        # Open file sebagai binary
+        with open(file_save_path_thumbnail, "rb") as image:
+            f = image.read()
+            image_data = bytearray(f)
+            # Upload ke github storage
+            upload_file_or_update(thumbnail_path,f"By {username}",bytes(image_data))
+
         # Delete temp file
         os.remove(file_save_path)
+        os.remove(file_save_path_thumbnail)
         doc = {
             "username": username,
             "image": StorageURL+file_path,
             "image_repo": file_path,
+            "image_thumbnail": StorageURL+thumbnail_path,
+            "image_thumbnail_repo": thumbnail_path,
+            "title_receive": title_receive,
+            "deskripsi_receive": deskripsi_receive,
+            "kategori_receive": kategori_receive,
         }
         # Masukkan url ke database
         table_photos.insert_one(doc)
@@ -300,6 +408,7 @@ def delete_images():
         # Lihat isi cookie
         payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
         username = payload['username']
+        is_superadmin = payload['is_superadmin']
         # Payload terverifikasi
         pass
     except (jwt.ExpiredSignatureError,jwt.exceptions.DecodeError):
@@ -311,11 +420,15 @@ def delete_images():
     result = table_photos.find_one({"_id":ObjectId(image_id)})
     if not result:
         return jsonify({"msg":"Image not found"}),404 # Not found
+    if is_superadmin:
+        # Jika superadmin maka bolehkan
+        pass
     # Jika owner foto tersebut berbeda maka tidak akan di hapus
-    if result.get("username") != username:
+    elif result.get("username") != username:
         return jsonify({"msg":"Image owner is different"}),403 # Forbidden
     # Delete dari github storage
     delete_file_from_storage(result.get("image_repo"),f"Delete By {username}")
+    delete_file_from_storage(result.get("image_thumbnail_repo"),f"Delete By {username}")
     # Delete dari mongodb
     table_photos.delete_one({"_id":ObjectId(image_id)})
     return jsonify({"msg":"Image deleted"})
@@ -361,11 +474,17 @@ def update_profile_image():
         # Simpan file ke folder temp
         file.save(file_save_path)
         
+        # Cek apakah user pernah mengupload file ke storage
+        if current_data_profile_pic:
+            # Delete dari storage
+            delete_file_from_storage(current_data_profile_pic,f"Delete By {username}")
+        else:
+            # Maka user masih menggunakan profile pict default dari static folder
+            pass
         # Open file sebagai binary
         with open(file_save_path, "rb") as image:
             f = image.read()
             image_data = bytearray(f)
-            delete_file_from_storage(current_data_profile_pic,f"Delete By {username}")
             # Upload ke github storage
             upload_file_or_update(file_path,f"By {username}",bytes(image_data))
         # Delete temp file
@@ -388,24 +507,20 @@ def login_fn():
 # Endpoint registrasi
 @app.post('/api/sign_up')
 def sign_up():
-    # Default foto profil untuk user
-    default_profile_pic = "./static/defaults/default-profile-pic.png"
     username_receive = request.form.get('username_give')
     password_receive = request.form.get('password_give')
     # Cek apakah username telah dipakai
     user_from_db = table_users.find_one({"username":username_receive})
     if user_from_db:
         return jsonify({"msg":"username telah dipakai"}),409 # Conflict
-    # Hash password
-    password_hash = hashlib.sha256(password_receive.encode('utf-8')).hexdigest()
-    # Salt password agar lebih aman
-    salted_password = SALT_HASH+password_hash
+    salted_password = hash_salt_password(password_receive)
     doc = {
         "username": username_receive,
         "password": salted_password,
         "bio": "Hello this is my bio",
         "profile_pic": default_profile_pic,
         "gender": "N/A",
+        "is_superadmin": False,
     }
     # Masukkan ke database
     table_users.insert_one(doc)
@@ -418,10 +533,7 @@ def sign_in():
     password_receive = request.form.get('password_give')
     # Mencari user dengan username tsb
     user_from_db = table_users.find_one({"username":username_receive})
-    # Mengubah string ke bentuk hash
-    password_hash = hashlib.sha256(password_receive.encode('utf-8')).hexdigest()
-    # Menambah salt pada awal hash
-    salted_password = SALT_HASH+password_hash
+    salted_password = hash_salt_password(password_receive)
     # Compare digest digunakan untuk mencegah timing attack
     is_correct_username = secrets.compare_digest(user_from_db.get("username"), username_receive)
     is_correct_password = secrets.compare_digest(user_from_db.get("password"), salted_password)
@@ -432,7 +544,8 @@ def sign_in():
         }),404 # Not found
     # Buat isi token
     payload={
-        "username":username_receive,
+        "is_superadmin":user_from_db.get("is_superadmin"),
+        "username":user_from_db.get("username"),
         "exp": datetime.now() + timedelta (seconds=Expired_Seconds),
     }
     # Buat token lalu encode
@@ -440,4 +553,5 @@ def sign_in():
     return jsonify({"result": "success","token": token})
 
 if __name__ == "__main__":
+    check_superadmin()
     app.run("0.0.0.0",5000,True)
