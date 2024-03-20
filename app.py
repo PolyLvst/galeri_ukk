@@ -152,7 +152,15 @@ def home():
         msg = 'Something wrong happens'
         return redirect(url_for('login_fn',msg=msg))
     # Jika payload terverifikasi maka kode dibawah akan di execute
-    return render_template('index.html')
+    skip = int(request.args.get("skip",default=0))
+    limit = int(request.args.get("limit",default=20))
+    # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
+    photos = list(table_photos.find({}).sort("_id",-1).skip(skip=skip).limit(limit=limit))
+    idx = 0
+    for doc in photos:
+        photos[idx]["_id"] = str(doc["_id"])
+        idx += 1
+    return render_template('index.html',images=photos)
 
 @app.get("/api/search")
 def search():

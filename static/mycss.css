@@ -1,1 +1,7 @@
 /* Berikan comment agar team paham */
+.container-masonry{
+    margin:0 auto;
+}
+.width-image{
+    width: 200px;
+}
