@@ -53,9 +53,12 @@ function load_images() {
 };
 function layout_masonry() {
     // Initialize Masonry
-    var $grid = $('#gallery').masonry({
+    let mason_layout = $('#gallery').masonry({
         itemSelector: '.card',
         isFitWidth: true
+    });
+    mason_layout.imagesLoaded().progress(function () {
+        mason_layout.masonry('layout');
     });
 };
 function render_users_infos() {
