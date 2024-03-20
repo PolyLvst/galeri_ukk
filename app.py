@@ -426,9 +426,14 @@ def delete_images():
     # Jika owner foto tersebut berbeda maka tidak akan di hapus
     elif result.get("username") != username:
         return jsonify({"msg":"Image owner is different"}),403 # Forbidden
+    
+    # Cek apakah thumbnail tersedia
+    current_data_image_thumb = result.get("image_thumbnail_repo")
+    if current_data_image_thumb:
+        # Delete dari storage
+        delete_file_from_storage(current_data_image_thumb,f"Delete By {username}")
     # Delete dari github storage
     delete_file_from_storage(result.get("image_repo"),f"Delete By {username}")
-    delete_file_from_storage(result.get("image_thumbnail_repo"),f"Delete By {username}")
     # Delete dari mongodb
     table_photos.delete_one({"_id":ObjectId(image_id)})
     return jsonify({"msg":"Image deleted"})
