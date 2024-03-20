@@ -22,6 +22,8 @@
     <!-- Jquery -->
     <script src="https://code.jquery.com/jquery-3.7.1.js"
         integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <!-- Masonry js imagesLoaded -->
+    <script src="../static/imagesloaded.pkgd.min.js"></script>
     <!-- Masonry js -->
     <script src="../static/masonry.pkgd.min.js"></script>
     <!-- Font Awesome -->
@@ -159,7 +161,7 @@
                 sidebar.toggleClass('is-active');
             });
             // Placeholder images untuk bikin rame doang
-            // load_images();
+            load_images();
             layout_masonry();
             render_users_infos();
         });
