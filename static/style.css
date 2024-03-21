@@ -1,0 +1,29 @@
+.poppins-medium {
+    font-family: "Poppins", sans-serif;
+    font-weight: 500;
+    font-style: normal;
+}
+
+body {
+    font-family: Poppins;
+    font-weight: 10px;
+}
+
+html,
+body {
+    overflow: hidden;
+}
+
+.background {
+    width: 100%;
+    height: 300px;
+    background-size: 90% 90%;
+    background-position: center top;
+}
+
+.poppins-medium {
+    font-family: "Poppins", sans-serif;
+    font-weight: 700;
+    font-style: normal;
+}
+
