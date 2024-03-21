@@ -10,6 +10,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Gemunu+Libre:wght@700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
     rel="stylesheet" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
   <!-- Custom css -->
   <link rel="stylesheet" href="../static/mycss.css" />
   <!-- Jquery -->
@@ -55,19 +56,21 @@
         </a>
       </div>
       <div class="navbar-end">
+         <!-- search bar -->
+         <div class="mx-5 my-5">
+           <form>
+            <div class="search">
+              <span class="search-icon material-symbols-outlined">search</span>
+              <input class="search-input" type="search" placeholder="Search">
+            </div>
+          </form>
+         </div>
         <div class="mx-5 my-5">
           <figure class="profile-pic" id="user-profile-picture">
             <img onclick="openSidebar()" class="is-rounded" src="../static/defaults/48x48.png">
           </figure>
         </div>
       </div>
-        <!-- search bar -->
-        <form>
-            <div class="search">
-              <span class="search-icon material-symbols-outlined">search</span>
-              <input class="search-input" type="search" placeholder="Search">
-            </div>
-        </form>
     </div>
   </nav>
   <div class="overlay" onclick="closeSidebar()"></div>
@@ -222,36 +225,6 @@
           </div>
         </div>
         
-        <div class="column is-3">
-          <div class="card">
-            <div class="card-image">
-              <figure class="image is-4by3">
-                <img src="https://bulma.io/images/placeholders/1280x960.png" alt="Placeholder image">
-              </figure>
-            </div>
-            <div class="card-content">
-              <div class="media">
-                <div class="media-left">
-                  <figure class="image is-48x48">
-                    <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image">
-                  </figure>
-                </div>
-                <div class="media-content">
-                  <p class="title is-4">John Smith</p>
-                  <p class="subtitle is-6">@johnsmith</p>
-                </div>
-              </div>
-          
-              <div class="content">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                Phasellus nec iaculis mauris. <a>@bulmaio</a>.
-                <a href="#">#css</a> <a href="#">#responsive</a>
-                <br>
-                <time datetime="2016-1-1">11:09 PM - 1 Jan 2016</time>
-              </div>
-            </div>
-          </div>
-        </div>
         <div class="column is-3">
           <div class="card">
             <div class="card-image">
