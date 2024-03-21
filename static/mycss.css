@@ -21,6 +21,16 @@
 .container-masonry {
     margin: 0 auto;
 }
+.search{
+    --padding: 5px;
+
+    width: max-content;
+    display: flex;
+    align-items: center;
+    padding: var(--padding);
+    border-radius: 28px;
+    background: #f6f6f6 ;
+}
 .search:focus-within{
     box-shadow: 0 0 2px rgba(0, 0, 0, 0.75);
 }
