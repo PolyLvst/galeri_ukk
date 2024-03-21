@@ -14,12 +14,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500&family=Poppins:wght@500&display=swap"
         rel="stylesheet">
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+
+
     <style>
-        h3{
+        h3 {
             color: #0062A359;
         }
-        
-        h1{
+
+        h1 {
             color: #0062A359;
         }
 
@@ -39,28 +43,68 @@
                 <h3>LOGIN</h3>
                 <div class="column">
                     <label for="email">Email</label>
-                    <input class="input is-primary" type="text" placeholder="Email address">
+                    <input class="input is-primary" type="text" placeholder="Email address" id="username">
                 </div>
                 <div class="column">
                     <label for="Name">Password</label>
-                    <input class="input is-primary" type="password" placeholder="Password">
+                    <input class="input is-primary" type="password" placeholder="Password" id="password">
                 </div>
                 <div class="column">
-                    <button class="button is-primary is-fullwidth" type="submit">Login</button>
+                    <button id="loginBtn" class="button is-primary is-fullwidth" type="submit" href="#">Login</button>
                 </div>
                 <div class="has-text-centered">
-                    <p class="is-size-7"> Don't have an account? <a href="#" class="has-text-primary">Sign up</a>
+                    <p class="is-size-7"> Don't have an account? <a href="/daftar" class="has-text-primary">Sign
+                            up</a>
                     </p>
                 </div>
             </div>
         </div>
         <img src="../static/Group 1.png" alt="gamabr">
     </div>
+    <script>
+        $(document).ready(function () {
+            $("#loginBtn").click(function (event) {
+                // Menghentikan form dari submit biasa
+                event.preventDefault();
 
+                // Mengambil nilai dari input
+                var username_give = $("#username").val();  // Menyesuaikan nama variabel
+                var password_give = $("#password").val();  // Menyesuaikan nama variabel
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous">
-        </script>
+                // Melakukan permintaan AJAX ke endpoint login
+                $.ajax({
+                    url: '/api/sign_in',
+                    method: 'POST',
+                    data: {
+                        "username_give": username_give,
+                        "password_give": password_give
+                    },
+                    success: function (response) {
+                        // Mengatur cookie dengan nama 'nama_cookie' dan nilai 'nilai_cookie' dengan masa kedaluwarsa 1 hari
+                        $.cookie('token', response["token"], { expires: 1 });
+
+                        // Jika login berhasil, redirect atau lakukan tindakan lainnya
+                        window.location.href = '/';
+                    },
+                    error: function (xhr, status, error) {
+                        // Jika login gagal, tampilkan pesan error
+                        var errorMessage = xhr.responseJSON.msg;
+                        $("#error-message").text(errorMessage);
+                    }
+                });
+            });
+            $("#signupBtn").click(function (event) {
+                // Menghentikan tindakan default dari tautan
+                event.preventDefault();
+
+                // Mendapatkan URL dari atribut href tautan
+                var signupUrl = $(this).attr('href');
+
+                // Mengarahkan pengguna ke halaman "daftar.html"
+                window.location.href = signupUrl;
+            });
+        });
+    </script>
 </body>
 
 </html>
