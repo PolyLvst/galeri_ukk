@@ -20,9 +20,21 @@
 .container-masonry{
     margin:0 auto;
 }
-.width-image{
-    width: 200px;
+.search:focus-within{
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.75);
 }
-.mt-n1{
-    margin-top: 10px;
+.search-input{
+    font-size: 16px;
+    font-family: "Poppins", sans-serif;
+    color: #333333;
+    margin-left: var(--padding);
+    outline: none;
+    border: none;
+    background: transparent;
+    flex: 1;
 }
+.search-input::placeholder
+{
+    color: rgba(0, 0, 0, 0.25);
+}
+
