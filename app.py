@@ -45,7 +45,7 @@ def get_images():
     conn.close()
     response = [{"id":i[0],
                  "foto_path":i[1],
-                 "user_id":i[2]} for i in data]
+                 "user_id":i[2]} for i in data] 
     return response
 
 @app.post("/images/create")
@@ -69,7 +69,7 @@ def sign_in():
         })
     payload={
         "id":username_receive,
-        "exp": datetime.utcnow() + timedelta (seconds=Expired__Seconds),
+        "exp": datetime.utcnow() + timedelta (seconds=Expired_Seconds),
     }
 
 if __name__ == "__main__":
