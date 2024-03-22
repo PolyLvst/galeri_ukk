@@ -1,0 +1,59 @@
+
+.about-us{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 28px;
+    padding: 0;
+}
+
+.abous {
+    width: 582px;
+    height: 48px;
+    flex-grow: 0;
+    font-family: "Poppins";
+    font-size: 16px;
+    font-weight: 300;
+    font-stretch: normal;
+    font-style: normal;
+    line-height: normal;
+    letter-spacing: normal;
+    text-align: center;
+    color: #000;
+}
+
+.img{
+    flex-grow: 0;
+    object-fit: contain;
+    box-shadow: 0 4px 57.9px 0 rgba(200, 0, 0, 0.2);
+}
+
+
+/* responsif */
+
+/* Styles for laptops (screen width 1024px and above) */
+@media (min-width: 1024px) {
+    .abous {
+        width: 582px;
+        height: 48px;
+    }
+}
+
+/* Styles for tablets (screen width between 768px and 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .abous {
+        width: 80%; /* Example percentage width for tablet */
+        height: auto; /* Adjust height automatically */
+        font-size: 14px; /* Slightly smaller font size for tablet */
+    }
+}
+
+/* Styles for smartphones (screen width less than 768px) */
+@media (max-width: 767px) {
+    .abous {
+        width: 100%; /* Full width on smartphones */
+        height: auto; /* Adjust height automatically */
+        font-size: 12px; /* Even smaller font size for smartphones */
+    }
+}
