@@ -79,9 +79,9 @@ function render_users_infos() {
             let bio_about = data["bio"];
             let user_gender = data["gender"];
             profile_picture.empty();
-            profile_picture.append(`<img onclick="openSidebar()" class="is-rounded" src="${profile_pic}">`)
+            profile_picture.append(`<img class="is-rounded" src="${profile_pic}">`)
             sidebar_pp.empty();
-            sidebar_pp.append(`<img onclick="closeSidebar()" class="is-rounded" src="${profile_pic}">`)
+            sidebar_pp.append(`<img class="is-rounded" src="${profile_pic}">`)
             sidebar_username.empty();
             sidebar_username.append(`<p class="has-text-weight-bold">${username}</p>`)
             sidebar_about.empty();
@@ -95,16 +95,17 @@ function render_users_infos() {
     })
 
 }
-function openSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    const overlay = document.querySelector('.overlay');
-    sidebar.classList.add('open');
-    overlay.style.display = 'block';
+function sidebar_toggle() {
+    const sidebar = $('.sidebar');
+    const overlay = $('.overlay');
+    if (sidebar.hasClass("open")){
+        sidebar.removeClass('open');
+        overlay.css('display', 'none');
+    } else {
+        sidebar.addClass('open');
+        overlay.css('display', 'block');
+    }
 }
-
-function closeSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    const overlay = document.querySelector('.overlay');
-    sidebar.classList.remove('open');
-    overlay.style.display = 'none';
+function sidebar_listener(){
+    $(".sidebar-listener").click(function() {sidebar_toggle()})
 }

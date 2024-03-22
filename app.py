@@ -22,15 +22,13 @@ MONGODB_URI = os.environ.get("MONGODB_URI")
 DB_NAME = os.environ.get("DB_NAME")
 SECRET_KEY = os.environ.get("SECRET_KEY")
 SALT_HASH = os.environ.get("SALT_HASH")
-GH_USER = os.environ.get("GH_USER")
-GH_PW = os.environ.get("GH_PW")
-GH_TOKEN = os.environ.get("GH_TOKEN")
 TOKEN = 'token'
 
 IMAGES_THUMBNAIL_SIZE = (300,300)
+image_maxsize = 1 #Mb
 
 # using an access token
-StorageURL = "http://localhost:5500/"
+StorageURL = os.environ.get("StorageURL")# "http://localhost:5500/"
 # Default foto profil untuk user
 default_profile_pic = "./static/defaults/default-profile-pic.png"
 
@@ -54,6 +52,22 @@ allowed_ext = {'png', 'jpg', 'jpeg', 'gif'}
 def check_ext(extension:str):
     # Cek dengan ekstensi yg boleh
     return True if extension in allowed_ext else False
+
+# Hemat storage
+def limit_image_size(image_path, max_size_mb=1):
+    # Check the file size
+    if os.path.getsize(image_path) <= max_size_mb * 1024 * 1024:  # Convert MB to bytes
+        return True  # File size is within the limit
+    # Open the image
+    image = Image.open(image_path)
+    # Kalkulasi dimensi untuk mecocokkan dengan maximum file size
+    new_width = int(image.size[0] * (max_size_mb * 1024 * 1024 / os.path.getsize(image_path)) ** 0.5)
+    new_height = int(image.size[1] * (max_size_mb * 1024 * 1024 / os.path.getsize(image_path)) ** 0.5)
+    # Resize fotonya
+    resized_image = image.resize((new_width, new_height))
+    # Save foto
+    resized_image.save(image_path)
+    return True
 
 # Upload file ke storage atau update
 def upload_file_to_storage(file_path_static:str,content:str,token:str):
@@ -406,6 +420,7 @@ def create_images():
 
         # Simpan file ke folder temp
         file.save(file_save_path)
+        limit_image_size(file_save_path,image_maxsize)
 
         # Thumbnail
         thumbnail_unique_format = f"thumbnail_{unique_format}"

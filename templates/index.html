@@ -44,7 +44,7 @@
                     HELIOS
                 </h1>
             </a>
-            <a role="button" class="navbar-burger mt-4 mr-3" aria-label="menu" aria-expanded="false"
+            <a role="button" class="navbar-burger mt-2 mr-3" aria-label="menu" aria-expanded="false"
                 data-target="navbar-div-menu">
                 <span aria-hidden="true"></span>
                 <span aria-hidden="true"></span>
@@ -74,18 +74,18 @@
                     </form>
                 </div>
                 <div class="mx-5 my-5">
-                    <figure class="profile-pic" id="user-profile-picture">
-                        <img onclick="openSidebar()" class="is-rounded" src="../static/defaults/48x48.png">
+                    <figure class="profile-pic sidebar-listener" id="user-profile-picture">
+                        <img class="is-rounded" src="../static/defaults/48x48.png">
                     </figure>
                 </div>
             </div>
         </div>
     </nav>
-    <div class="overlay" onclick="closeSidebar()"></div>
+    <div class="overlay sidebar-listener"></div>
     <div class="sidebar">
         <div class="mx-5 my-4">
             <figure class="profile-pic" id="sidebar-user-profile-picture">
-                <img onclick="closeSidebar()" class="is-rounded" src="../static/defaults/48x48.png">
+                <img class="is-rounded" src="../static/defaults/48x48.png">
             </figure>
             <div class="has-text-white mt-4">
                 <div id="sidebar-username">
@@ -96,7 +96,7 @@
                     <p class="is-size-7 has-text-weight-light">About</p>
                     <div>
                         <p id="sidebar-user-about">...</p>
-                        <img onclick="closeSidebar()" width="17" height="17" src="../static/assets/edit-2.svg"
+                        <img width="17" height="17" src="../static/assets/edit-2.svg"
                             alt="Edit icon">
                     </div>
                 </div>
@@ -105,7 +105,7 @@
                     <p class="is-size-7 has-text-weight-light">Gender</p>
                     <div>
                         <p id="sidebar-user-gender">N/A</p>
-                        <img onclick="closeSidebar()" width="17" height="17" src="../static/assets/edit-2.svg"
+                        <img width="17" height="17" src="../static/assets/edit-2.svg"
                             alt="Edit icon">
                     </div>
                 </div>
@@ -138,6 +138,51 @@
         </div>
     </div>
     <div class="content">
+        <!-- upload -->
+        <div class="has-text-right mb-3 mt-3">
+            <button class="button is-link is-outlined mx-5 modal-button" id="upload"
+                data-target="modal-upload">Upload</button>
+        </div>
+        <div id="modal-upload" class="modal">
+            <div class="modal-background"></div>
+            <div class="modal-content has-background-white py-5 px-5">
+                <h3 class="title mb-6">Upload</h3>
+                <!-- isi dalam upload -->
+                <form>
+                    <div class="field">
+                        <div class="file is-normal">
+                            <label class="file-label">
+                                <input class="file-input" type="file" name="resume">
+                                <span class="file-cta">
+                                    <span class="file-icon">
+                                        <i class="fas fa-upload"></i>
+                                    </span>
+                                    <span class="file-label">
+                                        Upload Image
+                                    </span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Judul</label>
+                        <div class="control">
+                            <input class="input is-link" type="text" placeholder="Judul">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Deskripsi</label>
+                        <div class="control">
+                            <input class="input is-link" type="text" placeholder="Deskripsi">
+                        </div>
+                    </div>
+                    <div class="mt-6 has-text-centered">
+                        <button class="button is-link is-outlined">Save</button>
+                    </div>
+                </form>
+            </div>
+            <button class="modal-close is-large" aria-label="close"></button>
+        </div>
         <div class="container">
             <div class="grid container-masonry" id="gallery">
                 {% for data in images %}
@@ -154,7 +199,21 @@
         <!-- Image modal-->
         {% for data in images %}
         <div id="modal-image-{{ data['_id'] }}" class="modal modal-fx-superScaled">
-            <div class="modal-background"></div>
+            <div class="modal-background">
+                <div class="mx-4 column box bottom-content has-text-centered">
+                    <span class="icon" onclick="alert('Bookmarked')">
+                        <i class="fa-regular fa-bookmark"></i>
+                        <i class="fa-solid fa-bookmark has-text-link"></i>
+                    </span>
+                    <span class="icon ml-4" onclick="alert('Liked')">
+                        <i class="fa-regular fa-heart"></i>
+                        <i class="fa-solid fa-heart has-text-danger"></i>
+                    </span>
+                    <span class="icon ml-4" onclick="alert('Commented')">
+                        <i class="fa-solid fa-comment"></i>
+                    </span>
+                </div>
+            </div>
             <div class="modal-content is-image">
                 <!-- src="{{ data['image_thumbnail'] }}" -->
                 <img loading="lazy" class="lazy-load" src="{{ data['image'] }}" alt="Photos by {{ data['username'] }}">
@@ -178,6 +237,7 @@
             load_images();
             layout_masonry();
             render_users_infos();
+            sidebar_listener();
         });
     </script>
 </body>
