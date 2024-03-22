@@ -548,6 +548,11 @@ def login_fn():
     msg = request.args.get("msg")
     return render_template("login.html", msg=msg)
 
+# Login page
+@app.get("/daftar")
+def daftar_fn():
+    return render_template("daftar.html")
+
 # Endpoint registrasi
 @app.post('/api/sign_up')
 def sign_up():
