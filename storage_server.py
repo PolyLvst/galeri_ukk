@@ -97,4 +97,4 @@ def delete_image():
 if __name__ == "__main__":
     # Cek apakah folder tersedia
     check_folders()
-    app.run("0.0.0.0",5500,True)
+    app.run("0.0.0.0",5000,True)
