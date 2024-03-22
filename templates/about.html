@@ -21,7 +21,7 @@
     <!-- Custom js -->
     <script src="../static/myjs.js"></script>
     <!-- Bulma -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
     <!-- Bulma modal css -->
     <link rel="stylesheet" href="https://unpkg.com/bulma-modal-fx/dist/css/modal-fx.min.css" />
     <!-- Font Awesome -->
@@ -52,10 +52,10 @@
                 <a class="navbar-item" href="/">
                     Home
                 </a>
-                <a class="navbar-item" href="/about">
+                <a class="navbar-item has-text-weight-bold" href="/about">
                     About us
                 </a>
-                <a class="navbar-item has-text-weight-bold" href="/blog">
+                <a class="navbar-item" href="/blog">
                     Blog
                 </a>
             </div>
@@ -70,18 +70,18 @@
                     </form>
                 </div>
                 <div class="mx-5 my-5">
-                    <figure class="profile-pic" id="user-profile-picture">
-                        <img onclick="openSidebar()" class="is-rounded" src="../static/defaults/48x48.png">
+                    <figure class="profile-pic sidebar-listener" id="user-profile-picture">
+                        <img class="is-rounded" src="../static/defaults/48x48.png">
                     </figure>
                 </div>
             </div>
         </div>
     </nav>
-    <div class="overlay" onclick="closeSidebar()"></div>
+    <div class="overlay sidebar-listener"></div>
     <div class="sidebar">
         <div class="mx-5 my-4">
             <figure class="profile-pic" id="sidebar-user-profile-picture">
-                <img onclick="closeSidebar()" class="is-rounded" src="../static/defaults/48x48.png">
+                <img class="is-rounded" src="../static/defaults/48x48.png">
             </figure>
             <div class="has-text-white mt-4">
                 <div id="sidebar-username">
@@ -92,7 +92,7 @@
                     <p class="is-size-7 has-text-weight-light">About</p>
                     <div>
                         <p id="sidebar-user-about">...</p>
-                        <img onclick="closeSidebar()" width="17" height="17" src="../static/assets/edit-2.svg"
+                        <img width="17" height="17" src="../static/assets/edit-2.svg"
                             alt="Edit icon">
                     </div>
                 </div>
@@ -101,7 +101,7 @@
                     <p class="is-size-7 has-text-weight-light">Gender</p>
                     <div>
                         <p id="sidebar-user-gender">N/A</p>
-                        <img onclick="closeSidebar()" width="17" height="17" src="../static/assets/edit-2.svg"
+                        <img width="17" height="17" src="../static/assets/edit-2.svg"
                             alt="Edit icon">
                     </div>
                 </div>
@@ -136,12 +136,11 @@
     <!-- abous -->
 
     <div class="about-us mx-3">
-        
-        <figure image is-4by3 >
-                  <img src="../static/defaults/ourPhoto.png">
-                </figure>
-        <span
-            class="abous mx-3">
+
+        <figure image is-4by3>
+            <img src="../static/defaults/ourPhoto.png">
+        </figure>
+        <span class="abous mx-3">
 
             helios merupakan proyek ukk yg dikerjakan oleh 5 orang siswa SMK 1 panji
 
@@ -165,6 +164,7 @@
                 sidebar.toggleClass('is-active');
             });
             render_users_infos();
+            sidebar_listener();
         });
     </script>
 </body>
