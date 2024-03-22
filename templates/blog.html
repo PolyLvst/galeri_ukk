@@ -39,7 +39,7 @@
           HELIOS
         </h1>
       </a>
-      <a role="button" class="navbar-burger mt-4 mr-3" aria-label="menu" aria-expanded="false"
+      <a role="button" class="navbar-burger mt-2 mr-3" aria-label="menu" aria-expanded="false"
         data-target="navbar-div-menu">
         <span aria-hidden="true"></span>
         <span aria-hidden="true"></span>
@@ -69,18 +69,18 @@
           </form>
         </div>
         <div class="mx-5 my-5">
-          <figure class="profile-pic" id="user-profile-picture">
-            <img onclick="openSidebar()" class="is-rounded" src="../static/defaults/48x48.png">
+          <figure class="profile-pic sidebar-listener" id="user-profile-picture">
+            <img class="is-rounded" src="../static/defaults/48x48.png">
           </figure>
         </div>
       </div>
     </div>
   </nav>
-  <div class="overlay" onclick="closeSidebar()"></div>
+  <div class="overlay sidebar-listener"></div>
   <div class="sidebar">
     <div class="mx-5 my-4">
       <figure class="profile-pic" id="sidebar-user-profile-picture">
-        <img onclick="closeSidebar()" class="is-rounded" src="../static/defaults/48x48.png">
+        <img class="is-rounded" src="../static/defaults/48x48.png">
       </figure>
       <div class="has-text-white mt-4">
         <div id="sidebar-username">
@@ -91,7 +91,7 @@
           <p class="is-size-7 has-text-weight-light">About</p>
           <div>
             <p id="sidebar-user-about">...</p>
-            <img onclick="closeSidebar()" width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon">
+            <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon">
           </div>
         </div>
         <!-- Max 30 character -->
@@ -99,7 +99,7 @@
           <p class="is-size-7 has-text-weight-light">Gender</p>
           <div>
             <p id="sidebar-user-gender">N/A</p>
-            <img onclick="closeSidebar()" width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon">
+            <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon">
           </div>
         </div>
         <hr class="separator">
@@ -321,6 +321,7 @@
         sidebar.toggleClass('is-active');
       });
       render_users_infos();
+      sidebar_listener();
     });
   </script>
 </body>
