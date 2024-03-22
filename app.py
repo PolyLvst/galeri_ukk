@@ -7,8 +7,6 @@ from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 from pymongo import MongoClient
 from dotenv import load_dotenv
-from github import Github
-from github import Auth
 from PIL import Image
 import requests
 import hashlib

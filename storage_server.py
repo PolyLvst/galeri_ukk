@@ -31,7 +31,7 @@ def check_folders():
             # Buat folder jika tidak ada
             os.makedirs(name=path)
 
-@app.post("/api/images/save")
+@app.route("/api/images/save",methods=["POST"])
 def save_image():
     # Ambil cookie file
     token_receive = request.cookies.get(TOKEN)    
@@ -67,7 +67,7 @@ def save_image():
         # Foto tidak terupload
         return {"msg":"No image uploaded"},404 # Not found
     
-@app.post("/api/images/delete")
+@app.route("/api/images/delete",methods=["POST","DELETE"])
 def delete_image():
     # Ambil cookie file
     token_receive = request.cookies.get(TOKEN)
