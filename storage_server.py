@@ -31,6 +31,10 @@ def check_folders():
             # Buat folder jika tidak ada
             os.makedirs(name=path)
 
+@app.route("/")
+def home():
+    return "Flask page not found",404
+
 @app.route("/api/images/save",methods=["POST"])
 def save_image():
     # Ambil cookie file
@@ -93,4 +97,4 @@ def delete_image():
 if __name__ == "__main__":
     # Cek apakah folder tersedia
     check_folders()
-    app.run("0.0.0.0",5500,True)
+    app.run("0.0.0.0",5000,True)
