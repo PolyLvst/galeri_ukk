@@ -19,7 +19,7 @@
   <!-- Custom js -->
   <script src="../static/myjs.js"></script>
   <!-- Bulma -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
   <!-- Bulma modal css -->
   <link rel="stylesheet" href="https://unpkg.com/bulma-modal-fx/dist/css/modal-fx.min.css" />
   <!-- Font Awesome -->
@@ -282,6 +282,31 @@
           </div>
         </div>
       </div>
+    
+      <!-- next slide button -->
+      <nav class="pagination" role="navigation" aria-label="pagination">
+        <a class="pagination-previous is-disabled" title="This is the first page"
+          >Previous</a
+        >
+        <a href="#" class="pagination-next">Next page</a>
+        <ul class="pagination-list">
+          <li>
+            <a
+              class="pagination-link is-current"
+              aria-label="Page 1"
+              aria-current="page"
+              >1</a
+            >
+          </li>
+          <li>
+            <a href="#" class="pagination-link" aria-label="Goto page 2">2</a>
+          </li>
+          <li>
+            <a href="#" class="pagination-link" aria-label="Goto page 3">3</a>
+          </li>
+        </ul>
+      </nav>
+    
     <!-- Bulma modal js -->
     <script src="https://unpkg.com/bulma-modal-fx/dist/js/modal-fx.min.js"></script>
   <script>
