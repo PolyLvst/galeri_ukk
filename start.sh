@@ -1,19 +1,29 @@
-# To be used when deploying
-set -eu
+#!/bin/bash
 
-export PYTHONUNBUFFERED=true
-
-VIRTUALENV=.data/venv
-
-if [ ! -d $VIRTUALENV ]; then
-  python3 -m venv $VIRTUALENV
+# Check if venv directory exists
+if [ ! -d "venv" ]; then
+    echo "Creating Python virtual environment..."
+    python -m venv venv
 fi
 
-if [ ! -f $VIRTUALENV/bin/pip ]; then
-  curl --silent --show-error --retry 5 https://bootstrap.pypa.io/get-pip.py | $VIRTUALENV/bin/python
+# Activate the virtual environment
+source venv/bin/activate
+
+# Check if pip is installed
+if ! command -v pip &> /dev/null; then
+    echo "pip is not installed. Installing pip..."
+    # Install pip
+    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+    python get-pip.py
+    rm get-pip.py
 fi
 
-$VIRTUALENV/bin/pip install -r requirements-glitch.txt
+# Install required Python packages using pip in the virtual environment
+pip install -r requirements-glitch.txt
 
-# $VIRTUALENV/bin/python3 app.py
-$VIRTUALENV/bin/python3 storage_server.py
+# Start your Python application
+python storage_server.py
+# python app.py
+
+# Deactivate the virtual environment
+deactivate

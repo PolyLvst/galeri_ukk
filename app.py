@@ -1,8 +1,7 @@
 import random
 import string
-from typing import Union
 from bson import ObjectId
-from flask import Flask, redirect,render_template,jsonify,request,send_file, url_for
+from flask import Flask, redirect,render_template,jsonify,request, url_for
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 from pymongo import MongoClient
@@ -157,6 +156,8 @@ def home():
     try:
         # Buka konten cookie
         payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        username = payload["username"]
+        is_superadmin = payload["is_superadmin"]
         # Payload terverifikasi
         pass
     except jwt.ExpiredSignatureError:
@@ -176,7 +177,7 @@ def home():
     for doc in photos:
         photos[idx]["_id"] = str(doc["_id"])
         idx += 1
-    return render_template('index.html',images=photos)
+    return render_template('index.html',images=photos,current_username=username,is_superadmin=is_superadmin)
 
 @app.get("/api/bookmarks")
 def bookmarks():
@@ -226,27 +227,49 @@ def bookmarks_page():
 
 @app.get("/api/search")
 def search():
-    query = request.form.get('query', '')
-    gallery_data = list(table_photos.find({},{"_id":False}))
+    # Ambil cookie
+    token_receive = request.cookies.get(TOKEN)
+    try:
+        # Buka konten cookie
+        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        username = payload["username"]
+        is_superadmin = payload["is_superadmin"]
+        # Payload terverifikasi
+        pass
+    except jwt.ExpiredSignatureError:
+        # Sesinya sudah lewat dari 24 Jam
+        msg = 'Your session has expired'
+        return redirect(url_for('login_fn',msg=msg))
+    except jwt.exceptions.DecodeError:
+        # Tidak ada token
+        msg = 'Something wrong happens'
+        return redirect(url_for('login_fn',msg=msg))
+    # Jika payload terverifikasi maka kode dibawah akan di execute
+    query = request.args.get('query', '')
+    gallery_data = list(table_photos.find({}).sort("_id",-1))
     results = []
     for image in gallery_data:
         # Jika title terdapat unsur query
-        if query.lower() in image['title'].lower():
+        if query.lower() in image.get('title','').lower():
             # Tambahkan ke result
             results.append(image)
         # Jika kategori terdapat unsur query
-        elif query.lower() in image['kategori'].lower():
+        elif query.lower() in image.get('kategori','').lower():
             # Tambahkan ke result
             results.append(image)
         # Jika deskripsi terdapat unsur query
-        elif query.lower() in image['deskripsi'].lower():
+        elif query.lower() in image.get('deskripsi','').lower():
             # Tambahkan ke result
             results.append(image)
         # Jika username terdapat unsur query
-        elif query.lower() in image['username'].lower():
+        elif query.lower() in image.get('username','').lower():
             # Tambahkan ke result
             results.append(image)
-    return jsonify({"results":results})
+    idx = 0
+    for doc in results:
+        results[idx]["_id"] = str(doc["_id"])
+        idx += 1
+    return jsonify({"results":results,"is_superadmin":is_superadmin,"username":username})
 
 @app.get("/blog")
 def blog():
@@ -485,7 +508,7 @@ def delete_images():
     if current_data_image_thumb:
         # Delete dari storage
         delete_file_from_storage(current_data_image_thumb,token=token_receive)
-    # Delete dari github storage
+    # Delete dari storage
     delete_file_from_storage(result.get("image_repo"),token=token_receive)
     # Delete dari mongodb
     table_photos.delete_one({"_id":ObjectId(image_id)})
@@ -613,9 +636,9 @@ def sign_in():
     # Buat token lalu encode
     token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
     return jsonify({"result": "success","token": token})
-
+    
 if __name__ == "__main__":
     check_superadmin()
     # Cek apakah folder tersedia
     check_folders()
-    app.run("0.0.0.0",5000,True)
+    app.run("localhost",5000,True)
