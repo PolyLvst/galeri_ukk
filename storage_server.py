@@ -28,7 +28,7 @@ def check_folders():
 
 @app.route("/")
 def home():
-    return jsonify({"msg":"Flask page not found"})
+    return jsonify({"msg":"Still awake"})
 
 @app.route("/api/images/save",methods=["POST"])
 def save_image():
@@ -54,9 +54,9 @@ def save_image():
         extension = os.path.splitext(filename)[-1].replace('.','')
         if not check_ext(extension):
             return jsonify({"msg":"Extension not allowed"}),406 # Not acceptable
-        unique_format = f"{filename}"
-        file_path = f"{file_path_receive}/{unique_format}"
-        file_save_path = f"./static/{file_path}"
+        unique_format = filename
+        file_path = file_path_receive+"/"+unique_format
+        file_save_path = "./static/"+file_path
 
         # Simpan file ke folder temp
         file.save(file_save_path)
@@ -81,7 +81,7 @@ def delete_image():
         return "Unauthorized",401
     # Jika payload terverifikasi maka kode dibawah akan di execute
     file_path = request.form.get("file_path")
-    file_location = f"./static/{file_path}"
+    file_location = "./static/"+file_path
 
     if os.path.exists(file_location):
         os.remove(file_location)

@@ -15,7 +15,8 @@ def call_storage():
     while True:
         response = requests.get(StorageURL)
         if response.status_code:
-            print(f"Storage responded at : {datetime.now()}")
+            print(f"# Storage responded at : {datetime.now()} | msg : {response.text}")
+        print(f"Waiting {DelayAwake}s ...")
         time.sleep(DelayAwake)
 
 if __name__ == "__main__":
