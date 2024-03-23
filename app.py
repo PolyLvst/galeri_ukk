@@ -291,6 +291,26 @@ def blog():
     # Jika payload terverifikasi maka kode dibawah akan di execute
     return render_template('blog.html')
 
+@app.get("/my-gallery")
+def gallery_page():
+    # Ambil cookie
+    token_receive = request.cookies.get(TOKEN)
+    try:
+        # Buka konten cookie
+        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        # Payload terverifikasi
+        pass
+    except jwt.ExpiredSignatureError:
+        # Sesinya sudah lewat dari 24 Jam
+        msg = 'Your session has expired'
+        return redirect(url_for('login_fn',msg=msg))
+    except jwt.exceptions.DecodeError:
+        # Tidak ada token
+        msg = 'Something wrong happens'
+        return redirect(url_for('login_fn',msg=msg))
+    # Jika payload terverifikasi maka kode dibawah akan di execute
+    return render_template('gallery.html')
+
 @app.get("/about")
 def about_page():
     return render_template("about.html")
@@ -464,9 +484,9 @@ def create_images():
             "image_repo": file_path,
             "image_thumbnail": StorageURL+"static/"+thumbnail_path,
             "image_thumbnail_repo": thumbnail_path,
-            "title_receive": title_receive,
-            "deskripsi_receive": deskripsi_receive,
-            "kategori_receive": kategori_receive,
+            "title": title_receive,
+            "deskripsi": deskripsi_receive,
+            "kategori": kategori_receive,
         }
         # Masukkan url ke database
         table_photos.insert_one(doc)
@@ -641,4 +661,5 @@ if __name__ == "__main__":
     check_superadmin()
     # Cek apakah folder tersedia
     check_folders()
-    app.run("localhost",5000,True)
+    # app.run("localhost",5000,True)
+    app.run("0.0.0.0",5000,True)

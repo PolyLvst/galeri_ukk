@@ -70,13 +70,10 @@
             <div class="navbar-end">
                 <!-- search bar -->
                 <div class="mx-5 my-5">
-                    <!-- <form> -->
-                        <div class="search">
-                            <span class="search-icon material-symbols-outlined">search</span>
-                            <input class="search-input" type="search" placeholder="Search">
-                            <button onclick="search_images()">Send</button>
-                        </div>
-                    <!-- </form> -->
+                    <div class="search">
+                        <span class="search-icon material-symbols-outlined" onclick="search_images()">search</span>
+                        <input class="search-input" type="search" placeholder="Search" onkeydown="search_images()">
+                    </div>
                 </div>
                 <div class="mx-5 my-5">
                     <figure class="profile-pic sidebar-listener" id="user-profile-picture">
@@ -101,8 +98,7 @@
                     <p class="is-size-7 has-text-weight-light">About</p>
                     <div>
                         <p id="sidebar-user-about">...</p>
-                        <img width="17" height="17" src="../static/assets/edit-2.svg"
-                            alt="Edit icon">
+                        <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon">
                     </div>
                 </div>
                 <!-- Max 30 character -->
@@ -110,8 +106,7 @@
                     <p class="is-size-7 has-text-weight-light">Gender</p>
                     <div>
                         <p id="sidebar-user-gender">N/A</p>
-                        <img width="17" height="17" src="../static/assets/edit-2.svg"
-                            alt="Edit icon">
+                        <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon">
                     </div>
                 </div>
                 <hr class="separator">
@@ -124,7 +119,7 @@
                     </span>
                 </div>
                 <div class="mt-4">
-                    <span class="icon-text" onclick="window.location.href = '/';">
+                    <span class="icon-text" onclick="window.location.href = '/my-gallery';">
                         <span class="icon">
                             <i class="fa-regular fa-images"></i>
                         </span>
@@ -153,38 +148,75 @@
             <div class="modal-content has-background-white py-5 px-5">
                 <h3 class="title mb-6">Upload</h3>
                 <!-- isi dalam upload -->
-                <form>
-                    <div class="field">
-                        <div class="file is-normal">
-                            <label class="file-label">
-                                <input class="file-input" type="file" name="resume">
-                                <span class="file-cta">
-                                    <span class="file-icon">
-                                        <i class="fas fa-upload"></i>
-                                    </span>
-                                    <span class="file-label">
-                                        Upload Image
-                                    </span>
+                <div class="field">
+                    <div class="file is-normal">
+                        <label class="file-label">
+                            <input class="file-input" type="file" name="resume" id="file-input-upload">
+                            <span class="file-cta">
+                                <span class="file-icon">
+                                    <i class="fas fa-upload"></i>
                                 </span>
-                            </label>
+                                <span class="file-label">
+                                    Upload Image
+                                </span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Judul</label>
+                    <div class="control">
+                        <input class="input is-link" type="text" placeholder="Judul" id="judul-upload">
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Deskripsi</label>
+                    <div class="control">
+                        <input class="input is-link" type="text" placeholder="Deskripsi" id="deskripsi-upload">
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Kategori</label>
+                    <div class="control">
+                        <div class="columns is-mobile is-multiline" id="kategori-picker-upload">
+                            <div class="column is-narrow">
+                                <span class="tag tags-list-unique is-success" id="all-tags" onclick="toggleTags('all-tags','All');">
+                                    All
+                                    <button class="delete is-small" id="delete-tags-kategori-All"></button>
+                                </span>
+                            </div>
+                            <div class="column is-narrow">
+                                <span class="tag tags-list-unique is-danger" id="teknologi-tags" onclick="toggleTags('teknologi-tags','Teknologi');">
+                                    Teknologi
+                                </span>
+                            </div>
+                            <div class="column is-narrow">
+                                <span class="tag tags-list-unique is-danger" id="hewan-tags" onclick="toggleTags('hewan-tags','Hewan');">
+                                    Hewan
+                                </span>
+                            </div>
+                            <div class="column is-narrow">
+                                <span class="tag tags-list-unique is-danger" id="makanan-tags" onclick="toggleTags('makanan-tags','Makanan');">
+                                    Makanan
+                                </span>
+                            </div>
+                            <div class="column is-narrow">
+                                <span class="tag tags-list-unique is-danger" id="alam-tags" onclick="toggleTags('alam-tags','Alam');">
+                                    Alam
+                                </span>
+                            </div>
+                            <div class="column is-narrow">
+                                <span class="tag tags-list-unique is-danger" id="orang-tags" onclick="toggleTags('orang-tags','Orang');">
+                                    Orang
+                                </span>
+                            </div>
                         </div>
                     </div>
-                    <div class="field">
-                        <label class="label">Judul</label>
-                        <div class="control">
-                            <input class="input is-link" type="text" placeholder="Judul">
-                        </div>
-                    </div>
-                    <div class="field">
-                        <label class="label">Deskripsi</label>
-                        <div class="control">
-                            <input class="input is-link" type="text" placeholder="Deskripsi">
-                        </div>
-                    </div>
-                    <div class="mt-6 has-text-centered">
-                        <button class="button is-link is-outlined">Save</button>
-                    </div>
-                </form>
+                </div>
+
+                <div class="mt-6 has-text-centered">
+                    <button class="button is-link is-outlined" onclick="upload_button()">Save</button>
+                </div>
             </div>
             <button class="modal-close is-large" aria-label="close"></button>
         </div>
@@ -227,7 +259,8 @@
                 </div>
                 <div class="modal-content is-image">
                     <!-- src="{{ data['image_thumbnail'] }}" -->
-                    <img loading="lazy" class="lazy-load" src="{{ data['image'] }}" alt="Photos by {{ data['username'] }}">
+                    <img loading="lazy" class="lazy-load" src="{{ data['image'] }}"
+                        alt="Photos by {{ data['username'] }}">
                 </div>
                 <button class="modal-close is-large" aria-label="close"></button>
             </div>
@@ -241,7 +274,7 @@
         $(document).ready(function () {
             const sidebar = $('#sidebar');
             const sidebarToggle = $('#sidebarToggle');
-            
+
             sidebarToggle.click(function () {
                 sidebar.toggleClass('is-active');
             });

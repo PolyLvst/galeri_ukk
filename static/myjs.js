@@ -115,6 +115,10 @@ function sidebar_listener() {
     $(".sidebar-listener").click(function () { sidebar_toggle() })
 }
 function search_images() {
+    if (event.key === 'Enter') {
+    } else {
+        return;
+    }
     const searchBar = $('.search-input');
     const galleryContent = $('#gallery');
     const modalsContent = $('#modals-image-fullscreen');
@@ -153,15 +157,15 @@ function search_images() {
                                 <i class="fa-solid fa-comment"></i>
                             </span>
                 `;
-                if (response['is_superadmin'] || results[idx]['username'] === response['current_username']){
+                if (response['is_superadmin'] || results[idx]['username'] === response['username']) {
                     // Adalah superadmin atau image ini milik user tsb
-                    tempHtmlModals+=`
+                    tempHtmlModals += `
                     <span class="icon ml-4" onclick="alert('Deleted')">
                     <i class="fa-solid fa-trash"></i>
                     </span>
                     `;
                 }
-                tempHtmlModals+=`
+                tempHtmlModals += `
                         </div>
                     </div>
                     <div class="modal-content is-image">
@@ -188,4 +192,50 @@ function logout_account() {
     $.removeCookie('token', { path: '/' });
     console.log("logged out")
     window.location.href = "/login"
+}
+function upload_button() {
+    let judulUpload = $("#judul-upload").val();
+    let deskripsiUpload = $("#deskripsi-upload").val();
+    let fileUpload = $("#file-input-upload")[0].files[0];
+    let kategori = getSelectedTags();
+    let form_data = new FormData();
+    form_data.append('file_give', fileUpload);
+    form_data.append('title_give', judulUpload);
+    form_data.append('deskripsi_give', deskripsiUpload);
+    form_data.append('kategori_give', kategori);
+    $.ajax({
+        type: 'POST',
+        url: '/api/images/create',
+        cache: false,
+        processData: false,
+        contentType: false,
+        data: form_data,
+        success: function (response,textStatus,xhr) {
+            if (xhr.status == 200) {
+                window.location.reload();
+            } else {
+                alert('Something went wrong '+response["msg"]);
+            }
+        }
+    })
+}
+function getSelectedTags() {
+    let selectedTags = [];
+    $('.tags-list-unique.is-success').each(function () {
+        selectedTags.push($(this).text().trim());
+    });
+    return selectedTags;
+}
+function toggleTags(targetId, tagsName) {
+    let target = $("#" + targetId);
+    if (target.hasClass("is-success")) {
+        target.removeClass("is-success");
+        target.addClass("is-danger");
+        $('#delete-tags-kategori-' + tagsName).remove();
+    } else {
+        target.removeClass("is-danger");
+        target.addClass("is-success");
+        $('#delete-tags-kategori-' + tagsName).remove();
+        target.append(`<button class="delete is-small" id="delete-tags-kategori-${tagsName}"></button>`)
+    }
 }
