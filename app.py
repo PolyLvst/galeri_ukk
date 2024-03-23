@@ -1,15 +1,13 @@
 import random
 import string
-from typing import Union
 from bson import ObjectId
-from flask import Flask, redirect,render_template,jsonify,request,send_file, url_for
+from flask import Flask, redirect,render_template,jsonify,request, url_for
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 from pymongo import MongoClient
 from dotenv import load_dotenv
-from github import Github
-from github import Auth
 from PIL import Image
+import requests
 import hashlib
 import secrets
 import jwt
@@ -21,16 +19,13 @@ MONGODB_URI = os.environ.get("MONGODB_URI")
 DB_NAME = os.environ.get("DB_NAME")
 SECRET_KEY = os.environ.get("SECRET_KEY")
 SALT_HASH = os.environ.get("SALT_HASH")
-GH_USER = os.environ.get("GH_USER")
-GH_PW = os.environ.get("GH_PW")
-GH_TOKEN = os.environ.get("GH_TOKEN")
 TOKEN = 'token'
 
 IMAGES_THUMBNAIL_SIZE = (300,300)
+image_maxsize = 1 #Mb
 
 # using an access token
-StorageRepo = "ambatron-dev/storage-ukk"
-StorageURL = "https://ambatron-dev.github.io/storage-ukk/"
+StorageURL = os.environ.get("StorageURL")# "http://localhost:5500/"
 # Default foto profil untuk user
 default_profile_pic = "./static/defaults/default-profile-pic.png"
 
@@ -45,6 +40,7 @@ db = client[DB_NAME]
 # Collection
 table_users = db.users
 table_photos = db.photos
+table_bookmarks = db.bookmarks
 
 # JWT Token exp
 Expired_Seconds = 60 * 60 * 24 # 24 Hour / 86400 seconds
@@ -54,29 +50,48 @@ def check_ext(extension:str):
     # Cek dengan ekstensi yg boleh
     return True if extension in allowed_ext else False
 
-# Login ke github dengan token yang didapat dari github settings developer
-def login_github():
-    auth = Auth.Token(token=GH_TOKEN)
-    return Github(auth=auth)
+# Hemat storage
+def limit_image_size(image_path, max_size_mb=1):
+    # Check the file size
+    if os.path.getsize(image_path) <= max_size_mb * 1024 * 1024:  # Convert MB to bytes
+        return True  # File size is within the limit
+    # Open the image
+    image = Image.open(image_path)
+    # Kalkulasi dimensi untuk mecocokkan dengan maximum file size
+    new_width = int(image.size[0] * (max_size_mb * 1024 * 1024 / os.path.getsize(image_path)) ** 0.5)
+    new_height = int(image.size[1] * (max_size_mb * 1024 * 1024 / os.path.getsize(image_path)) ** 0.5)
+    # Resize fotonya
+    resized_image = image.resize((new_width, new_height))
+    # Save foto
+    resized_image.save(image_path)
+    return True
 
-# Upload file ke github atau update
-def upload_file_or_update(path:str,message:str,content:Union[str,bytes],update=False,branch:str="main"):
-    g = login_github()
-    repo = g.get_repo(StorageRepo)
-    if update:
-        contents = repo.get_contents(path)
-        repo.update_file(path=contents.path, message=message, content=content, sha=contents.sha, branch=branch)
-    else:
-        repo.create_file(path=path,message=message,content=content,branch=branch)
-    g.close()
+# Upload file ke storage atau update
+def upload_file_to_storage(file_path_static:str,content:str,token:str):
+    # File path static contohnya bisa photos atau profile_pics
+    ApiStorage = StorageURL+"api/images/save"
+    response = requests.post(
+        url=ApiStorage,
+        files={"file_give":open(content,"rb")},
+        data={"file_path":file_path_static},
+        cookies={"token": token}
+    )
+    if response.status_code != 200:
+        print(f"Something went wrong : {response.status_code} | {response.text} | Cookie {token}")
+        raise Exception
 
-# Delete file github storage
-def delete_file_from_storage(path:str,message:str,branch:str="main"):
-    g = login_github()
-    repo = g.get_repo(StorageRepo)
-    contents = repo.get_contents(path)
-    repo.delete_file(path=contents.path, message=message, sha=contents.sha, branch=branch)
-    g.close()
+# Delete file dari storage
+def delete_file_from_storage(file_path_repo:str,token:str):
+    # File path static contohnya bisa photos atau profile_pics
+    ApiStorage = StorageURL+"api/images/delete"
+    response = requests.post(
+        url=ApiStorage,
+        data={"file_path":file_path_repo},
+        cookies={"token": token}
+    )
+    if response.status_code != 200:
+        print(f"Something went wrong : {response.status_code} | {response.text} | Cookie {token}")
+        raise Exception
 
 # Generate thumbnail
 def generate_thumbnail(input_image_path, output_thumbnail_path, thumbnail_size=(300, 300)):
@@ -141,6 +156,8 @@ def home():
     try:
         # Buka konten cookie
         payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        username = payload["username"]
+        is_superadmin = payload["is_superadmin"]
         # Payload terverifikasi
         pass
     except jwt.ExpiredSignatureError:
@@ -160,31 +177,99 @@ def home():
     for doc in photos:
         photos[idx]["_id"] = str(doc["_id"])
         idx += 1
-    return render_template('index.html',images=photos)
+    return render_template('index.html',images=photos,current_username=username,is_superadmin=is_superadmin)
+
+@app.get("/api/bookmarks")
+def bookmarks():
+    # Ambil cookie
+    token_receive = request.cookies.get(TOKEN)
+    try:
+        # Buka konten cookie
+        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        username = payload["username"]
+        # Payload terverifikasi
+        pass
+    except jwt.ExpiredSignatureError:
+        # Sesinya sudah lewat dari 24 Jam
+        msg = 'Your session has expired'
+        return redirect(url_for('login_fn',msg=msg))
+    except jwt.exceptions.DecodeError:
+        # Tidak ada token
+        msg = 'Something wrong happens'
+        return redirect(url_for('login_fn',msg=msg))
+    # Jika payload terverifikasi maka kode dibawah akan di execute
+    bookmarks_collection_amount = 3
+    bookmarks_preview_amount = 4
+    # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
+    bookmarks = list(table_bookmarks.find({"username":username},{"_id":False, "bookmarks": {"$slice": bookmarks_preview_amount}}).sort("_id",-1).limit(limit=bookmarks_collection_amount))
+    return jsonify({"data":bookmarks})
+    # return render_template('bookmarks.html')
+
+@app.get("/bookmarks")
+def bookmarks_page():
+    # Ambil cookie
+    token_receive = request.cookies.get(TOKEN)
+    try:
+        # Buka konten cookie
+        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        # Payload terverifikasi
+        pass
+    except jwt.ExpiredSignatureError:
+        # Sesinya sudah lewat dari 24 Jam
+        msg = 'Your session has expired'
+        return redirect(url_for('login_fn',msg=msg))
+    except jwt.exceptions.DecodeError:
+        # Tidak ada token
+        msg = 'Something wrong happens'
+        return redirect(url_for('login_fn',msg=msg))
+    # Jika payload terverifikasi maka kode dibawah akan di execute
+    return render_template('bookmarks.html')
 
 @app.get("/api/search")
 def search():
-    query = request.form.get('query', '')
-    gallery_data = list(table_photos.find({},{"_id":False}))
+    # Ambil cookie
+    token_receive = request.cookies.get(TOKEN)
+    try:
+        # Buka konten cookie
+        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        username = payload["username"]
+        is_superadmin = payload["is_superadmin"]
+        # Payload terverifikasi
+        pass
+    except jwt.ExpiredSignatureError:
+        # Sesinya sudah lewat dari 24 Jam
+        msg = 'Your session has expired'
+        return redirect(url_for('login_fn',msg=msg))
+    except jwt.exceptions.DecodeError:
+        # Tidak ada token
+        msg = 'Something wrong happens'
+        return redirect(url_for('login_fn',msg=msg))
+    # Jika payload terverifikasi maka kode dibawah akan di execute
+    query = request.args.get('query', '')
+    gallery_data = list(table_photos.find({}).sort("_id",-1))
     results = []
     for image in gallery_data:
         # Jika title terdapat unsur query
-        if query.lower() in image['title'].lower():
+        if query.lower() in image.get('title','').lower():
             # Tambahkan ke result
             results.append(image)
         # Jika kategori terdapat unsur query
-        elif query.lower() in image['kategori'].lower():
+        elif query.lower() in image.get('kategori','').lower():
             # Tambahkan ke result
             results.append(image)
         # Jika deskripsi terdapat unsur query
-        elif query.lower() in image['deskripsi'].lower():
+        elif query.lower() in image.get('deskripsi','').lower():
             # Tambahkan ke result
             results.append(image)
         # Jika username terdapat unsur query
-        elif query.lower() in image['username'].lower():
+        elif query.lower() in image.get('username','').lower():
             # Tambahkan ke result
             results.append(image)
-    return jsonify({"results":results})
+    idx = 0
+    for doc in results:
+        results[idx]["_id"] = str(doc["_id"])
+        idx += 1
+    return jsonify({"results":results,"is_superadmin":is_superadmin,"username":username})
 
 @app.get("/blog")
 def blog():
@@ -354,10 +439,9 @@ def create_images():
         file_path = f"photos/{unique_format}"
         file_save_path = f"./static/temp/{file_path}"
 
-        # Cek apakah folder tersedia
-        check_folders()
         # Simpan file ke folder temp
         file.save(file_save_path)
+        limit_image_size(file_save_path,image_maxsize)
 
         # Thumbnail
         thumbnail_unique_format = f"thumbnail_{unique_format}"
@@ -365,28 +449,20 @@ def create_images():
         file_save_path_thumbnail = f"./static/temp/{thumbnail_path}"
         generate_thumbnail(input_image_path=file_save_path,output_thumbnail_path=file_save_path_thumbnail,thumbnail_size=IMAGES_THUMBNAIL_SIZE)
         
-        # Open file sebagai binary
-        with open(file_save_path, "rb") as image:
-            f = image.read()
-            image_data = bytearray(f)
-            # Upload ke github storage
-            upload_file_or_update(file_path,f"By {username}",bytes(image_data))
+        # Upload ke storage
+        upload_file_to_storage(file_path_static="photos",content=file_save_path,token=token_receive)
 
-        # Open file sebagai binary
-        with open(file_save_path_thumbnail, "rb") as image:
-            f = image.read()
-            image_data = bytearray(f)
-            # Upload ke github storage
-            upload_file_or_update(thumbnail_path,f"By {username}",bytes(image_data))
+        # Upload ke storage
+        upload_file_to_storage(file_path_static="photos",content=file_save_path_thumbnail,token=token_receive)
 
         # Delete temp file
         os.remove(file_save_path)
         os.remove(file_save_path_thumbnail)
         doc = {
             "username": username,
-            "image": StorageURL+file_path,
+            "image": StorageURL+"static/"+file_path,
             "image_repo": file_path,
-            "image_thumbnail": StorageURL+thumbnail_path,
+            "image_thumbnail": StorageURL+"static/"+thumbnail_path,
             "image_thumbnail_repo": thumbnail_path,
             "title_receive": title_receive,
             "deskripsi_receive": deskripsi_receive,
@@ -431,9 +507,9 @@ def delete_images():
     current_data_image_thumb = result.get("image_thumbnail_repo")
     if current_data_image_thumb:
         # Delete dari storage
-        delete_file_from_storage(current_data_image_thumb,f"Delete By {username}")
-    # Delete dari github storage
-    delete_file_from_storage(result.get("image_repo"),f"Delete By {username}")
+        delete_file_from_storage(current_data_image_thumb,token=token_receive)
+    # Delete dari storage
+    delete_file_from_storage(result.get("image_repo"),token=token_receive)
     # Delete dari mongodb
     table_photos.delete_one({"_id":ObjectId(image_id)})
     return jsonify({"msg":"Image deleted"})
@@ -474,27 +550,26 @@ def update_profile_image():
         unique_format = f"{username}-{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}.{extension}"
         file_path = f"profile_pics/{unique_format}"
         file_save_path = f"./static/temp/{file_path}"
-        # Cek apakah folder tersedia
-        check_folders()
         # Simpan file ke folder temp
         file.save(file_save_path)
+
+        output_resized_profile_pic = f"profile_pics/mini_{unique_format}"
+        output_resized_profile_pic_save = f"./static/temp/{output_resized_profile_pic}"
+        generate_thumbnail(input_image_path=file_save_path,output_thumbnail_path=output_resized_profile_pic_save)
         
         # Cek apakah user pernah mengupload file ke storage
         if current_data_profile_pic:
             # Delete dari storage
-            delete_file_from_storage(current_data_profile_pic,f"Delete By {username}")
-        else:
-            # Maka user masih menggunakan profile pict default dari static folder
-            pass
-        # Open file sebagai binary
-        with open(file_save_path, "rb") as image:
-            f = image.read()
-            image_data = bytearray(f)
-            # Upload ke github storage
-            upload_file_or_update(file_path,f"By {username}",bytes(image_data))
+            delete_file_from_storage(file_path_repo=current_data_profile_pic,token=token_receive)
+        # Jika tidak ada current profile pic di db maka user masih menggunakan profile pict default dari static folder
+        # Upload ke storage
+        upload_file_to_storage(file_path_static="profile_pics",content=output_resized_profile_pic_save,token=token_receive)
+
         # Delete temp file
         os.remove(file_save_path)
-        doc = {"profile_pic": StorageURL+file_path,"profile_pic_repo":file_path}
+        os.remove(output_resized_profile_pic_save)
+        doc = {"profile_pic": StorageURL+"static/"+output_resized_profile_pic,
+               "profile_pic_repo":output_resized_profile_pic}
         # Masukkan url ke database
         # $set adalah cara mongodb mengupdate suatu document dalam table
         table_users.update_one(filter={"username":username},update={"$set":doc})
@@ -508,6 +583,11 @@ def update_profile_image():
 def login_fn():
     msg = request.args.get("msg")
     return render_template("login.html", msg=msg)
+
+# Login page
+@app.get("/daftar")
+def daftar_fn():
+    return render_template("daftar.html")
 
 # Endpoint registrasi
 @app.post('/api/sign_up')
@@ -556,7 +636,9 @@ def sign_in():
     # Buat token lalu encode
     token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
     return jsonify({"result": "success","token": token})
-
+    
 if __name__ == "__main__":
     check_superadmin()
-    app.run("0.0.0.0",5000,True)
+    # Cek apakah folder tersedia
+    check_folders()
+    app.run("localhost",5000,True)
