@@ -22,6 +22,10 @@
     <!-- Jquery -->
     <script src="https://code.jquery.com/jquery-3.7.1.js"
         integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <!-- JQuery cookie -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"
+        integrity="sha512-3j3VU6WC5rPQB4Ld1jnLV7Kd5xr+cq9avvhwqzbH/taCRNURoeEpoPBK9pDyeukwSxwRPJ8fDgvYXd6SkaZ2TA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <!-- Masonry js imagesLoaded -->
     <script src="../static/imagesloaded.pkgd.min.js"></script>
     <!-- Masonry js -->
@@ -66,12 +70,13 @@
             <div class="navbar-end">
                 <!-- search bar -->
                 <div class="mx-5 my-5">
-                    <form>
+                    <!-- <form> -->
                         <div class="search">
                             <span class="search-icon material-symbols-outlined">search</span>
                             <input class="search-input" type="search" placeholder="Search">
+                            <button onclick="search_images()">Send</button>
                         </div>
-                    </form>
+                    <!-- </form> -->
                 </div>
                 <div class="mx-5 my-5">
                     <figure class="profile-pic sidebar-listener" id="user-profile-picture">
@@ -126,7 +131,7 @@
                         <span>My Gallery</span>
                     </span>
                 </div>
-                <div class="bottom-content">
+                <div class="bottom-content" onclick="logout_account()">
                     <span class="icon-text">
                         <span class="icon">
                             <i class="fa-solid fa-right-from-bracket"></i>
@@ -187,7 +192,7 @@
             <div class="grid container-masonry" id="gallery">
                 {% for data in images %}
                 <!-- Gallery items will be dynamically added here -->
-                <div class="card my-2 mx-2 modal-button" data-target="modal-image-{{ data['_id']}}">
+                <div class="card my-2 mx-2 modal-button grid-items-masonry" data-target="modal-image-{{ data['_id']}}">
                     <div class="card-image">
                         <img src="{{ data['image_thumbnail'] }}" alt="Photos by {{ data['username'] }}"
                             style="width: 200px;" class="view-image">
@@ -197,44 +202,51 @@
             </div>
         </div>
         <!-- Image modal-->
-        {% for data in images %}
-        <div id="modal-image-{{ data['_id'] }}" class="modal modal-fx-superScaled">
-            <div class="modal-background">
-                <div class="mx-4 column box bottom-content has-text-centered">
-                    <span class="icon" onclick="alert('Bookmarked')">
-                        <i class="fa-regular fa-bookmark"></i>
-                        <i class="fa-solid fa-bookmark has-text-link"></i>
-                    </span>
-                    <span class="icon ml-4" onclick="alert('Liked')">
-                        <i class="fa-regular fa-heart"></i>
-                        <i class="fa-solid fa-heart has-text-danger"></i>
-                    </span>
-                    <span class="icon ml-4" onclick="alert('Commented')">
-                        <i class="fa-solid fa-comment"></i>
-                    </span>
+        <div id="modals-image-fullscreen">
+            {% for data in images %}
+            <div id="modal-image-{{ data['_id'] }}" class="modal modal-fx-superScaled">
+                <div class="modal-background">
+                    <div class="mx-4 column box bottom-content has-text-centered">
+                        <span class="icon" onclick="alert('Bookmarked')">
+                            <i class="fa-regular fa-bookmark"></i>
+                            <i class="fa-solid fa-bookmark has-text-link"></i>
+                        </span>
+                        <span class="icon ml-4" onclick="alert('Liked')">
+                            <i class="fa-regular fa-heart"></i>
+                            <i class="fa-solid fa-heart has-text-danger"></i>
+                        </span>
+                        <span class="icon ml-4" onclick="alert('Commented')">
+                            <i class="fa-solid fa-comment"></i>
+                        </span>
+                        {% if is_superadmin or data['username'] == current_username %}
+                        <span class="icon ml-4" onclick="alert('Deleted')">
+                            <i class="fa-solid fa-trash"></i>
+                        </span>
+                        {% endif %}
+                    </div>
                 </div>
+                <div class="modal-content is-image">
+                    <!-- src="{{ data['image_thumbnail'] }}" -->
+                    <img loading="lazy" class="lazy-load" src="{{ data['image'] }}" alt="Photos by {{ data['username'] }}">
+                </div>
+                <button class="modal-close is-large" aria-label="close"></button>
             </div>
-            <div class="modal-content is-image">
-                <!-- src="{{ data['image_thumbnail'] }}" -->
-                <img loading="lazy" class="lazy-load" src="{{ data['image'] }}" alt="Photos by {{ data['username'] }}">
-            </div>
-            <button class="modal-close is-large" aria-label="close"></button>
+            {% endfor %}
         </div>
-        {% endfor %}
     </div>
     <!-- Bulma modal js -->
-    <script src="https://unpkg.com/bulma-modal-fx/dist/js/modal-fx.min.js"></script>
+    <script src="../static/modal-fx.min.js"></script>
     <script>
         burger_function();
         $(document).ready(function () {
             const sidebar = $('#sidebar');
             const sidebarToggle = $('#sidebarToggle');
-
+            
             sidebarToggle.click(function () {
                 sidebar.toggleClass('is-active');
             });
             // Placeholder images untuk bikin rame doang
-            load_images();
+            // load_images();
             layout_masonry();
             render_users_infos();
             sidebar_listener();

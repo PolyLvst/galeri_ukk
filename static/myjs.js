@@ -52,12 +52,17 @@ function load_images() {
     });
 };
 function layout_masonry() {
-    // Initialize Masonry
-    let mason_layout = $('#gallery').masonry({
-        itemSelector: '.card',
+    options_masonry = {
+        // Tiap tiap gambar dengan class berikut dianggap masuk ke layout
+        itemSelector: '.grid-items-masonry',
+        // Responsive
         isFitWidth: true
-    });
+    }
+    // Initialize Masonry ke div dengan id gallery
+    var mason_layout = $('#gallery').masonry(options_masonry);
+    // Tunggu sampai foto telah terload semua
     mason_layout.imagesLoaded().progress(function () {
+        // Aplikasikan layout ke element
         mason_layout.masonry('layout');
     });
 };
@@ -98,7 +103,7 @@ function render_users_infos() {
 function sidebar_toggle() {
     const sidebar = $('.sidebar');
     const overlay = $('.overlay');
-    if (sidebar.hasClass("open")){
+    if (sidebar.hasClass("open")) {
         sidebar.removeClass('open');
         overlay.css('display', 'none');
     } else {
@@ -106,6 +111,81 @@ function sidebar_toggle() {
         overlay.css('display', 'block');
     }
 }
-function sidebar_listener(){
-    $(".sidebar-listener").click(function() {sidebar_toggle()})
+function sidebar_listener() {
+    $(".sidebar-listener").click(function () { sidebar_toggle() })
+}
+function search_images() {
+    const searchBar = $('.search-input');
+    const galleryContent = $('#gallery');
+    const modalsContent = $('#modals-image-fullscreen');
+    // Ambil value search bar
+    let searchBarContent = searchBar.val();
+    $.ajax({
+        url: "/api/search?query=" + searchBarContent,
+        type: "GET",
+        data: {},
+        success: function (response) {
+            let results = response["results"];
+            galleryContent.empty();
+            modalsContent.empty();
+            for (idx in results) {
+                let tempHtml = `
+                <div class="card my-2 mx-2 modal-button grid-items-masonry" data-target="modal-image-${results[idx]["_id"]}">
+                    <div class="card-image">
+                        <img src="${results[idx]['image_thumbnail']}" alt="Photos by ${results[idx]['username']}"
+                            style="width: 200px;" class="view-image">
+                    </div>
+                </div>
+                `;
+                let tempHtmlModals = `
+                <div id="modal-image-${results[idx]["_id"]}" class="modal modal-fx-superScaled">
+                    <div class="modal-background">
+                        <div class="mx-4 column box bottom-content has-text-centered">
+                            <span class="icon" onclick="alert('Bookmarked')">
+                                <i class="fa-regular fa-bookmark"></i>
+                                <i class="fa-solid fa-bookmark has-text-link"></i>
+                            </span>
+                            <span class="icon ml-4" onclick="alert('Liked')">
+                                <i class="fa-regular fa-heart"></i>
+                                <i class="fa-solid fa-heart has-text-danger"></i>
+                            </span>
+                            <span class="icon ml-4" onclick="alert('Commented')">
+                                <i class="fa-solid fa-comment"></i>
+                            </span>
+                `;
+                if (response['is_superadmin'] || results[idx]['username'] === response['current_username']){
+                    // Adalah superadmin atau image ini milik user tsb
+                    tempHtmlModals+=`
+                    <span class="icon ml-4" onclick="alert('Deleted')">
+                    <i class="fa-solid fa-trash"></i>
+                    </span>
+                    `;
+                }
+                tempHtmlModals+=`
+                        </div>
+                    </div>
+                    <div class="modal-content is-image">
+                        <img loading="lazy" class="lazy-load" src="${results[idx]['image']}" alt="Photos by ${results[idx]['username']}">
+                    </div>
+                    <button class="modal-close is-large" aria-label="close"></button>
+                </div>
+                `;
+                modalsContent.append(tempHtmlModals);
+                galleryContent.append(tempHtml).masonry('appended', tempHtml);
+                galleryContent.masonry('reloadItems');
+                galleryContent.masonry('layout');
+            }
+            reloadModalScript();
+        }
+    })
+}
+function reloadModalScript() {
+    $('script[src="../static/modal-fx.min.js"]').remove();
+    $('<script>').attr('src', '../static/modal-fx.min.js').appendTo('body');
+}
+function logout_account() {
+    console.log("Logging out")
+    $.removeCookie('token', { path: '/' });
+    console.log("logged out")
+    window.location.href = "/login"
 }
