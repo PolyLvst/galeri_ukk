@@ -114,7 +114,7 @@ function sidebar_toggle() {
 function sidebar_listener() {
     $(".sidebar-listener").click(function () { sidebar_toggle() })
 }
-function search_images() {
+function search_images(halamanHtml) {
     if (event.key === 'Enter') {
     } else {
         return;
@@ -122,6 +122,7 @@ function search_images() {
     const searchBar = $('.search-input');
     const galleryContent = $('#gallery');
     const modalsContent = $('#modals-image-fullscreen');
+    const paginationParent = $('#pagination-parent-nav');
     // Ambil value search bar
     let searchBarContent = searchBar.val();
     $.ajax({
@@ -133,14 +134,19 @@ function search_images() {
             galleryContent.empty();
             modalsContent.empty();
             for (idx in results) {
-                let tempHtml = `
-                <div class="card my-2 mx-2 modal-button grid-items-masonry" data-target="modal-image-${results[idx]["_id"]}">
-                    <div class="card-image">
-                        <img src="${results[idx]['image_thumbnail']}" alt="Photos by ${results[idx]['username']}"
-                            style="width: 200px;" class="view-image">
+                if (halamanHtml == "/") {
+                    let tempHtml = `
+                    <div class="card my-2 mx-2 modal-button grid-items-masonry" data-target="modal-image-${results[idx]["_id"]}">
+                        <div class="card-image">
+                            <img src="${results[idx]['image_thumbnail']}" alt="Photos by ${results[idx]['username']}"
+                                style="width: 200px;" class="view-image">
+                        </div>
                     </div>
-                </div>
-                `;
+                    `;
+                    galleryContent.append(tempHtml).masonry('appended', tempHtml);
+                    galleryContent.masonry('reloadItems');
+                    galleryContent.masonry('layout');
+                }
                 let tempHtmlModals = `
                 <div id="modal-image-${results[idx]["_id"]}" class="modal modal-fx-superScaled">
                     <div class="modal-background">
@@ -175,10 +181,41 @@ function search_images() {
                 </div>
                 `;
                 modalsContent.append(tempHtmlModals);
-                galleryContent.append(tempHtml).masonry('appended', tempHtml);
-                galleryContent.masonry('reloadItems');
-                galleryContent.masonry('layout');
+
             }
+            // Pagination adalah navigasi bawah yg menunjukkan halaman berapa user berada
+            let paginationHtml = ``;
+            // Jika ada halaman sebelumnya
+            if (response['prev_page']){
+                paginationHtml+=`<a href="${halamanHtml}?query=${searchBarContent}&page=${response['prev_page']}" class="pagination-previous">Previous</a>`;
+            } else {
+                paginationHtml+=`<a class="pagination-previous is-disabled">Previous</a>`;
+            }
+            // Jika ada halaman selanjutnya
+            if (response['next_page']){
+                paginationHtml+=`<a href="${halamanHtml}?query=${searchBarContent}&page=${response['next_page']}" class="pagination-next">Next page</a>`;
+            } else {
+                paginationHtml+=`<a class="pagination-next is-disabled">Next page</a>`;
+            }
+            paginationHtml+=`
+            <ul class="pagination-list">
+                <li><a href="${halamanHtml}?query=${searchBarContent}&page=1" class="pagination-link">1</a></li>
+
+                <li><span class="pagination-ellipsis">&hellip;</span></li>
+            `;
+            if (response['prev_page']){
+                paginationHtml+=`<li><a href="${halamanHtml}?query=${searchBarContent}&page=${response['prev_page']}" class="pagination-link">${response['prev_page']}</a></li>`;
+            }
+            paginationHtml+=`<li><a class="pagination-link is-current" id="is-current-page-number">${response['curr_page']}</a></li>`;
+            if (response['next_page']){
+                paginationHtml+=`<li><a href="${halamanHtml}?query=${searchBarContent}&page=${response['next_page']}" class="pagination-link">${response['next_page']}</a></li>`;
+            }
+            paginationHtml+=`
+                <li><span class="pagination-ellipsis">&hellip;</span></li>
+                <li><a href="${halamanHtml}?query=${searchBarContent}&page=${response['end_page']}" class="pagination-link">${response['end_page']}</a></li>
+            </ul>`;
+            paginationParent.empty();
+            paginationParent.append(paginationHtml);
             reloadModalScript();
         }
     })
@@ -194,6 +231,9 @@ function logout_account() {
     window.location.href = "/login"
 }
 function upload_button() {
+    const buttonSaveUpload = $("#button-save-upload-image");
+    buttonSaveUpload.empty();
+    buttonSaveUpload.append(`<progress class="progress is-small is-link my-3" max="100">Uploading</progress>`);
     let judulUpload = $("#judul-upload").val();
     let deskripsiUpload = $("#deskripsi-upload").val();
     let fileUpload = $("#file-input-upload")[0].files[0];
@@ -210,11 +250,11 @@ function upload_button() {
         processData: false,
         contentType: false,
         data: form_data,
-        success: function (response,textStatus,xhr) {
+        success: function (response, textStatus, xhr) {
             if (xhr.status == 200) {
                 window.location.reload();
             } else {
-                alert('Something went wrong '+response["msg"]);
+                alert('Something went wrong ' + response["msg"]);
             }
         }
     })
@@ -238,4 +278,13 @@ function toggleTags(targetId, tagsName) {
         $('#delete-tags-kategori-' + tagsName).remove();
         target.append(`<button class="delete is-small" id="delete-tags-kategori-${tagsName}"></button>`)
     }
+}
+function file_upload_image_namer() {
+    const fileInput = document.querySelector("#file-upload-images-div input[type=file]");
+    fileInput.onchange = () => {
+        if (fileInput.files.length > 0) {
+            const fileName = document.querySelector("#file-upload-images-div .file-name");
+            fileName.textContent = fileInput.files[0].name;
+        }
+    };
 }

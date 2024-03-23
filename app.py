@@ -1,3 +1,4 @@
+import math
 import random
 import string
 from bson import ObjectId
@@ -147,6 +148,41 @@ def check_superadmin():
         print(f"# User : helios-ruler")
         print(f"# Password : {pw}")
 
+def get_pagination_count(items_per_page=20,page=1):
+    total_items = table_photos.count_documents({})  # Total number of items in the collection
+    total_pages = math.ceil(total_items / items_per_page)
+
+    skip = (page - 1) * items_per_page
+
+    # Calculate end page, previous page, and next page
+    end_page = total_pages
+    prev_page = page - 1 if page > 1 else None
+    next_page = page + 1 if page < total_pages else None
+
+    return skip,prev_page,next_page,end_page
+
+def search_images_query(query:str=''):
+    gallery_data = list(table_photos.find({}).sort("_id",-1))
+    results = []
+    for image in gallery_data:
+        # Jika title terdapat unsur query
+        if query.lower() in image.get('title','').lower():
+            # Tambahkan ke result
+            results.append(image)
+        # Jika kategori terdapat unsur query
+        elif query.lower() in image.get('kategori','').lower():
+            # Tambahkan ke result
+            results.append(image)
+        # Jika deskripsi terdapat unsur query
+        elif query.lower() in image.get('deskripsi','').lower():
+            # Tambahkan ke result
+            results.append(image)
+        # Jika username terdapat unsur query
+        elif query.lower() in image.get('username','').lower():
+            # Tambahkan ke result
+            results.append(image)
+    return results
+
 # -------------- ENDPOINT -------------- #
 
 @app.get("/")
@@ -169,15 +205,43 @@ def home():
         msg = 'Something wrong happens'
         return redirect(url_for('login_fn',msg=msg))
     # Jika payload terverifikasi maka kode dibawah akan di execute
-    skip = int(request.args.get("skip",default=0))
-    limit = int(request.args.get("limit",default=20))
-    # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
-    photos = list(table_photos.find({}).sort("_id",-1).skip(skip=skip).limit(limit=limit))
+    items_per_page_home = 20
+
+    page = request.args.get('page', default=1, type=int)
+    per_page = request.args.get('per_page', default=items_per_page_home, type=int) # Number of items per page
+    query = request.args.get('query', '')
+
+    if query != '':
+        results = search_images_query(query=query)
+        total_items = len(results)  # Total number of items in the collection
+        total_pages = math.ceil(total_items / per_page)
+
+        # Calculate end page, previous page, and next page
+        end_page = total_pages
+        prev_page = page - 1 if page > 1 else None
+        next_page = page + 1 if page < total_pages else None
+        # Batasi sesuai items per page
+        skip = (page - 1) * per_page
+        limit = skip + per_page
+        photos = results[skip:limit]
+    else:
+        skip,prev_page,next_page,end_page = get_pagination_count(items_per_page=per_page,page=page)
+
+        # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
+        photos = list(table_photos.find({}).sort("_id",-1).skip(skip=skip).limit(limit=per_page))
     idx = 0
     for doc in photos:
         photos[idx]["_id"] = str(doc["_id"])
         idx += 1
-    return render_template('index.html',images=photos,current_username=username,is_superadmin=is_superadmin)
+    return render_template('index.html',
+                           images=photos,
+                           current_username=username,
+                           is_superadmin=is_superadmin,
+                           curr_page=page,
+                           prev_page=prev_page,
+                           next_page=next_page,
+                           end_page=end_page,
+                           query=query)
 
 @app.get("/api/bookmarks")
 def bookmarks():
@@ -246,30 +310,33 @@ def search():
         return redirect(url_for('login_fn',msg=msg))
     # Jika payload terverifikasi maka kode dibawah akan di execute
     query = request.args.get('query', '')
-    gallery_data = list(table_photos.find({}).sort("_id",-1))
-    results = []
-    for image in gallery_data:
-        # Jika title terdapat unsur query
-        if query.lower() in image.get('title','').lower():
-            # Tambahkan ke result
-            results.append(image)
-        # Jika kategori terdapat unsur query
-        elif query.lower() in image.get('kategori','').lower():
-            # Tambahkan ke result
-            results.append(image)
-        # Jika deskripsi terdapat unsur query
-        elif query.lower() in image.get('deskripsi','').lower():
-            # Tambahkan ke result
-            results.append(image)
-        # Jika username terdapat unsur query
-        elif query.lower() in image.get('username','').lower():
-            # Tambahkan ke result
-            results.append(image)
+    items_per_page = 20
+
+    page = request.args.get('page', default=1, type=int)
+    per_page = request.args.get('per_page', default=items_per_page, type=int) # Number of items per page
+
+    results = search_images_query(query=query)
+    
+    total_items = len(results)  # Total number of items in the collection
+    total_pages = math.ceil(total_items / per_page)
+
+    # Calculate end page, previous page, and next page
+    end_page = total_pages
+    prev_page = page - 1 if page > 1 else None
+    next_page = page + 1 if page < total_pages else None
+    # Batasi sesuai items per page
+    results = results[:per_page]
     idx = 0
     for doc in results:
         results[idx]["_id"] = str(doc["_id"])
         idx += 1
-    return jsonify({"results":results,"is_superadmin":is_superadmin,"username":username})
+    return jsonify({"results":results,
+                    "is_superadmin":is_superadmin,
+                    "username":username,
+                    "curr_page":page,
+                    "prev_page":prev_page,
+                    "next_page":next_page,
+                    "end_page":end_page})
 
 @app.get("/blog")
 def blog():
@@ -278,6 +345,8 @@ def blog():
     try:
         # Buka konten cookie
         payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        username = payload["username"]
+        is_superadmin = payload["is_superadmin"]
         # Payload terverifikasi
         pass
     except jwt.ExpiredSignatureError:
@@ -289,7 +358,27 @@ def blog():
         msg = 'Something wrong happens'
         return redirect(url_for('login_fn',msg=msg))
     # Jika payload terverifikasi maka kode dibawah akan di execute
-    return render_template('blog.html')
+    items_per_page_blog = 4
+
+    page = request.args.get('page', default=1, type=int)
+    per_page = request.args.get('per_page', default=items_per_page_blog, type=int) # Number of items per page
+
+    skip,prev_page,next_page,end_page = get_pagination_count(items_per_page=per_page,page=page)
+
+    # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
+    photos = list(table_photos.find({}).sort("_id",-1).skip(skip=skip).limit(limit=per_page))
+    idx = 0
+    for doc in photos:
+        photos[idx]["_id"] = str(doc["_id"])
+        idx += 1
+    return render_template('blog.html',
+                           images=photos,
+                           current_username=username,
+                           is_superadmin=is_superadmin,
+                           curr_page=page,
+                           prev_page=prev_page,
+                           next_page=next_page,
+                           end_page=end_page)
 
 @app.get("/my-gallery")
 def gallery_page():
@@ -388,15 +477,24 @@ def get_images():
         msg = 'Something wrong happens'
         return redirect(url_for('login_fn',msg=msg))
     # Jika payload terverifikasi maka kode dibawah akan di execute
-    skip = int(request.args.get("skip",default=0))
-    limit = int(request.args.get("limit",default=20))
+    items_per_page = 4
+
+    page = request.args.get('page', default=1, type=int)
+    per_page = request.args.get('per_page', default=items_per_page, type=int) # Number of items per page
+
+    skip,prev_page,next_page,end_page = get_pagination_count(items_per_page=per_page,page=page)
+
     # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
-    photos = list(table_photos.find({}).sort("_id",-1).skip(skip=skip).limit(limit=limit))
+    photos = list(table_photos.find({}).sort("_id",-1).skip(skip=skip).limit(limit=per_page))
     idx = 0
     for doc in photos:
         photos[idx]["_id"] = str(doc["_id"])
         idx += 1
-    return jsonify({"data":photos})
+    return jsonify({
+        "data":photos,
+        'end_page': end_page,
+        'prev_page': prev_page,
+        'next_page': next_page})
 
 # Endpoint ambil path images by me
 @app.get("/api/images/me") # Optional args skip and limit, contoh : /api/images?skip=0&limit=10

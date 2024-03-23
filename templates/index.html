@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+<!-- data-theme="dark" -->
 
 <head>
     <meta charset="UTF-8">
@@ -71,8 +72,8 @@
                 <!-- search bar -->
                 <div class="mx-5 my-5">
                     <div class="search">
-                        <span class="search-icon material-symbols-outlined" onclick="search_images()">search</span>
-                        <input class="search-input" type="search" placeholder="Search" onkeydown="search_images()">
+                        <span class="search-icon material-symbols-outlined" onclick="search_images(halamanHtml='/')">search</span>
+                        <input class="search-input" type="search" placeholder="Search" onkeydown="search_images(halamanHtml='/')">
                     </div>
                 </div>
                 <div class="mx-5 my-5">
@@ -149,7 +150,7 @@
                 <h3 class="title mb-6">Upload</h3>
                 <!-- isi dalam upload -->
                 <div class="field">
-                    <div class="file is-normal">
+                    <div class="file is-normal has-name" id="file-upload-images-div">
                         <label class="file-label">
                             <input class="file-input" type="file" name="resume" id="file-input-upload">
                             <span class="file-cta">
@@ -160,6 +161,7 @@
                                     Upload Image
                                 </span>
                             </span>
+                            <span class="file-name"></span>
                         </label>
                     </div>
                 </div>
@@ -180,33 +182,39 @@
                     <div class="control">
                         <div class="columns is-mobile is-multiline" id="kategori-picker-upload">
                             <div class="column is-narrow">
-                                <span class="tag tags-list-unique is-success" id="all-tags" onclick="toggleTags('all-tags','All');">
+                                <span class="tag tags-list-unique is-success" id="all-tags"
+                                    onclick="toggleTags('all-tags','All');">
                                     All
                                     <button class="delete is-small" id="delete-tags-kategori-All"></button>
                                 </span>
                             </div>
                             <div class="column is-narrow">
-                                <span class="tag tags-list-unique is-danger" id="teknologi-tags" onclick="toggleTags('teknologi-tags','Teknologi');">
+                                <span class="tag tags-list-unique is-danger" id="teknologi-tags"
+                                    onclick="toggleTags('teknologi-tags','Teknologi');">
                                     Teknologi
                                 </span>
                             </div>
                             <div class="column is-narrow">
-                                <span class="tag tags-list-unique is-danger" id="hewan-tags" onclick="toggleTags('hewan-tags','Hewan');">
+                                <span class="tag tags-list-unique is-danger" id="hewan-tags"
+                                    onclick="toggleTags('hewan-tags','Hewan');">
                                     Hewan
                                 </span>
                             </div>
                             <div class="column is-narrow">
-                                <span class="tag tags-list-unique is-danger" id="makanan-tags" onclick="toggleTags('makanan-tags','Makanan');">
+                                <span class="tag tags-list-unique is-danger" id="makanan-tags"
+                                    onclick="toggleTags('makanan-tags','Makanan');">
                                     Makanan
                                 </span>
                             </div>
                             <div class="column is-narrow">
-                                <span class="tag tags-list-unique is-danger" id="alam-tags" onclick="toggleTags('alam-tags','Alam');">
+                                <span class="tag tags-list-unique is-danger" id="alam-tags"
+                                    onclick="toggleTags('alam-tags','Alam');">
                                     Alam
                                 </span>
                             </div>
                             <div class="column is-narrow">
-                                <span class="tag tags-list-unique is-danger" id="orang-tags" onclick="toggleTags('orang-tags','Orang');">
+                                <span class="tag tags-list-unique is-danger" id="orang-tags"
+                                    onclick="toggleTags('orang-tags','Orang');">
                                     Orang
                                 </span>
                             </div>
@@ -214,7 +222,7 @@
                     </div>
                 </div>
 
-                <div class="mt-6 has-text-centered">
+                <div class="mt-6 has-text-centered" id="button-save-upload-image">
                     <button class="button is-link is-outlined" onclick="upload_button()">Save</button>
                 </div>
             </div>
@@ -267,6 +275,37 @@
             {% endfor %}
         </div>
     </div>
+    <div class="container my-3">
+        <!-- next slide button -->
+        <nav class="pagination is-centered" role="navigation" aria-label="pagination" id="pagination-parent-nav">
+            {% if prev_page %}
+            <a href="/?query={{ query }}&page={{ prev_page }}" class="pagination-previous">Previous</a>
+            {% else %}
+            <a class="pagination-previous is-disabled">Previous</a>
+            {% endif %}
+            {% if next_page %}
+            <a href="/?query={{ query }}&page={{ next_page }}" class="pagination-next">Next page</a>
+            {% else %}
+            <a class="pagination-next is-disabled">Next page</a>
+            {% endif %}
+            <ul class="pagination-list">
+                <li><a href="/?query={{ query }}&page=1" class="pagination-link">1</a></li>
+
+                <li><span class="pagination-ellipsis">&hellip;</span></li>
+
+                {% if prev_page %}
+                <li><a href="/?query={{ query }}&page={{ prev_page }}" class="pagination-link">{{ prev_page }}</a></li>
+                {% endif %}
+                <li><a class="pagination-link is-current">{{ curr_page }}</a></li>
+                {% if next_page %}
+                <li><a href="/?query={{ query }}&page={{ next_page }}" class="pagination-link">{{ next_page }}</a></li>
+                {% endif %}
+
+                <li><span class="pagination-ellipsis">&hellip;</span></li>
+                <li><a href="/?query={{ query }}&page={{ end_page }}" class="pagination-link">{{ end_page }}</a></li>
+            </ul>
+        </nav>
+    </div>
     <!-- Bulma modal js -->
     <script src="../static/modal-fx.min.js"></script>
     <script>
@@ -283,6 +322,7 @@
             layout_masonry();
             render_users_infos();
             sidebar_listener();
+            file_upload_image_namer();
         });
     </script>
 </body>
