@@ -886,8 +886,9 @@ def sign_in():
         }),404 # Not found
     # Buat isi token
     payload={
-        "id":username_receive,
-        "exp": datetime.utcnow() + timedelta (seconds=Expired__Seconds),
+        "username":username_receive,
+        "is_superadmin":user_from_db.get('is_superadmin'),
+        "exp": datetime.utcnow() + timedelta (seconds=Expired_Seconds),
     }
     # Buat token lalu encode
     token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
