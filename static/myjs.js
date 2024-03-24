@@ -114,7 +114,7 @@ function sidebar_toggle() {
 function sidebar_listener() {
     $(".sidebar-listener").click(function () { sidebar_toggle() })
 }
-function search_images(halamanHtml) {
+function search_images() {
     if (event.key === 'Enter') {
     } else {
         return;
@@ -134,19 +134,17 @@ function search_images(halamanHtml) {
             galleryContent.empty();
             modalsContent.empty();
             for (idx in results) {
-                if (halamanHtml == "/") {
-                    let tempHtml = `
-                    <div class="card my-2 mx-2 modal-button grid-items-masonry" data-target="modal-image-${results[idx]["_id"]}">
-                        <div class="card-image">
-                            <img src="${results[idx]['image_thumbnail']}" alt="Photos by ${results[idx]['username']}"
-                                style="width: 200px;" class="view-image">
-                        </div>
+                let tempHtml = `
+                <div class="card my-2 mx-2 modal-button grid-items-masonry" data-target="modal-image-${results[idx]["_id"]}">
+                    <div class="card-image">
+                        <img src="${results[idx]['image_thumbnail']}" alt="Photos by ${results[idx]['username']}"
+                            style="width: 200px;" class="view-image">
                     </div>
-                    `;
-                    galleryContent.append(tempHtml).masonry('appended', tempHtml);
-                    galleryContent.masonry('reloadItems');
-                    galleryContent.masonry('layout');
-                }
+                </div>
+                `;
+                galleryContent.append(tempHtml).masonry('appended', tempHtml);
+                galleryContent.masonry('reloadItems');
+                galleryContent.masonry('layout');
                 let tempHtmlModals = `
                 <div id="modal-image-${results[idx]["_id"]}" class="modal modal-fx-superScaled">
                     <div class="modal-background">
@@ -186,39 +184,49 @@ function search_images(halamanHtml) {
             // Pagination adalah navigasi bawah yg menunjukkan halaman berapa user berada
             let paginationHtml = ``;
             // Jika ada halaman sebelumnya
-            if (response['prev_page']){
-                paginationHtml+=`<a href="${halamanHtml}?query=${searchBarContent}&page=${response['prev_page']}" class="pagination-previous">Previous</a>`;
+            if (response['prev_page']) {
+                paginationHtml += `<a href="/?query=${searchBarContent}&page=${response['prev_page']}" class="pagination-previous">Previous</a>`;
             } else {
-                paginationHtml+=`<a class="pagination-previous is-disabled">Previous</a>`;
+                paginationHtml += `<a class="pagination-previous is-disabled">Previous</a>`;
             }
             // Jika ada halaman selanjutnya
-            if (response['next_page']){
-                paginationHtml+=`<a href="${halamanHtml}?query=${searchBarContent}&page=${response['next_page']}" class="pagination-next">Next page</a>`;
+            if (response['next_page']) {
+                paginationHtml += `<a href="/?query=${searchBarContent}&page=${response['next_page']}" class="pagination-next">Next page</a>`;
             } else {
-                paginationHtml+=`<a class="pagination-next is-disabled">Next page</a>`;
+                paginationHtml += `<a class="pagination-next is-disabled">Next page</a>`;
             }
-            paginationHtml+=`
+            paginationHtml += `
             <ul class="pagination-list">
-                <li><a href="${halamanHtml}?query=${searchBarContent}&page=1" class="pagination-link">1</a></li>
+                <li><a href="/?query=${searchBarContent}&page=1" class="pagination-link">1</a></li>
 
                 <li><span class="pagination-ellipsis">&hellip;</span></li>
             `;
-            if (response['prev_page']){
-                paginationHtml+=`<li><a href="${halamanHtml}?query=${searchBarContent}&page=${response['prev_page']}" class="pagination-link">${response['prev_page']}</a></li>`;
+            if (response['prev_page']) {
+                paginationHtml += `<li><a href="/?query=${searchBarContent}&page=${response['prev_page']}" class="pagination-link">${response['prev_page']}</a></li>`;
             }
-            paginationHtml+=`<li><a class="pagination-link is-current" id="is-current-page-number">${response['curr_page']}</a></li>`;
-            if (response['next_page']){
-                paginationHtml+=`<li><a href="${halamanHtml}?query=${searchBarContent}&page=${response['next_page']}" class="pagination-link">${response['next_page']}</a></li>`;
+            paginationHtml += `<li><a class="pagination-link is-current" id="is-current-page-number">${response['curr_page']}</a></li>`;
+            if (response['next_page']) {
+                paginationHtml += `<li><a href="/?query=${searchBarContent}&page=${response['next_page']}" class="pagination-link">${response['next_page']}</a></li>`;
             }
-            paginationHtml+=`
+            paginationHtml += `
                 <li><span class="pagination-ellipsis">&hellip;</span></li>
-                <li><a href="${halamanHtml}?query=${searchBarContent}&page=${response['end_page']}" class="pagination-link">${response['end_page']}</a></li>
+                <li><a href="/?query=${searchBarContent}&page=${response['end_page']}" class="pagination-link">${response['end_page']}</a></li>
             </ul>`;
             paginationParent.empty();
             paginationParent.append(paginationHtml);
             reloadModalScript();
         }
     })
+}
+function search_images_redirect() {
+    if (event.key === 'Enter') {
+    } else {
+        return;
+    }
+    const searchBar = $('.search-input');
+    // Ambil value search bar
+    let searchBarContent = searchBar.val();
+    window.location.href = `/?query=${searchBarContent}`;
 }
 function reloadModalScript() {
     $('script[src="../static/modal-fx.min.js"]').remove();
@@ -287,4 +295,22 @@ function file_upload_image_namer() {
             fileName.textContent = fileInput.files[0].name;
         }
     };
+}
+function toggleLike(id) {
+    const heartLike = $('#heart-icon-modals-fullscreen-'+id);
+    heartLike.empty();
+    heartLike.append(`<i class="fa-solid fa-heart has-text-danger"></i>`);
+}
+function toggleBookmark(id) {
+    const bookmarkIcon = $('#bookmark-icon-modals-fullscreen-'+id);
+    // $.ajax({
+    //     url:"/api/bookmark",
+    //     type:"POST",
+    //     data:{
+    //         "post_id_give":id,
+    //         "collection_id_give":id
+    //         }
+    // })
+    bookmarkIcon.empty();
+    bookmarkIcon.append(`<i class="fa-solid fa-bookmark has-text-link"></i>`);
 }

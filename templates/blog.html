@@ -36,7 +36,7 @@
 
 <body>
   <!-- Navbar -->
-  <nav class="navbar is-white has-shadow" role="navigation">
+  <nav class="navbar has-shadow" role="navigation">
     <div class="navbar-brand">
       <a class="navbar-item" href="/">
         <h1 class="Logo px-4">
@@ -66,10 +66,8 @@
         <!-- search bar -->
         <div class="mx-5 my-5">
           <div class="search">
-            <span class="search-icon material-symbols-outlined"
-              onclick="search_images(halamanHtml='blog')">search</span>
-            <input class="search-input" type="search" placeholder="Search"
-              onkeydown="search_images(halamanHtml='blog')">
+            <span class="search-icon material-symbols-outlined" onclick="search_images_redirect()">search</span>
+            <input class="search-input" type="search" placeholder="Search" onkeydown="search_images_redirect()">
           </div>
         </div>
         <div class="mx-5 my-5">
@@ -221,7 +219,7 @@
 
   <!-- Card -->
   <div class="container">
-    <div class="columns is-multiline">
+    <div class="columns is-multiline mx-4">
 
       {% for data in images %}
       <div class="column is-3">

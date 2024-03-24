@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-<!-- data-theme="dark" -->
 
 <head>
     <meta charset="UTF-8">
@@ -42,7 +41,7 @@
 
 <body>
     <!-- Navbar -->
-    <nav class="navbar is-white has-shadow" role="navigation">
+    <nav class="navbar has-shadow" role="navigation">
         <div class="navbar-brand">
             <a class="navbar-item" href="/">
                 <h1 class="Logo px-4">
@@ -72,8 +71,8 @@
                 <!-- search bar -->
                 <div class="mx-5 my-5">
                     <div class="search">
-                        <span class="search-icon material-symbols-outlined" onclick="search_images(halamanHtml='/')">search</span>
-                        <input class="search-input" type="search" placeholder="Search" onkeydown="search_images(halamanHtml='/')">
+                        <span class="search-icon material-symbols-outlined" onclick="search_images()">search</span>
+                        <input class="search-input" type="search" placeholder="Search" onkeydown="search_images()">
                     </div>
                 </div>
                 <div class="mx-5 my-5">
@@ -152,7 +151,7 @@
                 <div class="field">
                     <div class="file is-normal has-name" id="file-upload-images-div">
                         <label class="file-label">
-                            <input class="file-input" type="file" name="resume" id="file-input-upload">
+                            <input class="file-input" type="file" id="file-input-upload">
                             <span class="file-cta">
                                 <span class="file-icon">
                                     <i class="fas fa-upload"></i>
@@ -247,13 +246,19 @@
             <div id="modal-image-{{ data['_id'] }}" class="modal modal-fx-superScaled">
                 <div class="modal-background">
                     <div class="mx-4 column box bottom-content has-text-centered">
-                        <span class="icon" onclick="alert('Bookmarked')">
-                            <i class="fa-regular fa-bookmark"></i>
+                        <span class="icon" id="bookmark-icon-modals-fullscreen-{{ data['_id'] }}" onclick="toggleBookmark('{{ data['_id'] }}')">
+                            {% if data['bookmark_by_me'] %}
                             <i class="fa-solid fa-bookmark has-text-link"></i>
+                            {% else %}
+                            <i class="fa-regular fa-bookmark"></i>
+                            {% endif %}
                         </span>
-                        <span class="icon ml-4" onclick="alert('Liked')">
-                            <i class="fa-regular fa-heart"></i>
+                        <span class="icon ml-4" id="heart-icon-modals-fullscreen-{{ data['_id'] }}" onclick="toggleLike('{{ data['_id'] }}')">
+                            {% if data['like_by_me'] %}
                             <i class="fa-solid fa-heart has-text-danger"></i>
+                            {% else %}
+                            <i class="fa-regular fa-heart"></i>
+                            {% endif %}
                         </span>
                         <span class="icon ml-4" onclick="alert('Commented')">
                             <i class="fa-solid fa-comment"></i>
