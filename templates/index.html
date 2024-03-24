@@ -22,6 +22,10 @@
     <!-- Jquery -->
     <script src="https://code.jquery.com/jquery-3.7.1.js"
         integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <!-- JQuery cookie -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"
+        integrity="sha512-3j3VU6WC5rPQB4Ld1jnLV7Kd5xr+cq9avvhwqzbH/taCRNURoeEpoPBK9pDyeukwSxwRPJ8fDgvYXd6SkaZ2TA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <!-- Masonry js imagesLoaded -->
     <script src="../static/imagesloaded.pkgd.min.js"></script>
     <!-- Masonry js -->
@@ -37,7 +41,7 @@
 
 <body>
     <!-- Navbar -->
-    <nav class="navbar is-white has-shadow" role="navigation">
+    <nav class="navbar has-shadow" role="navigation">
         <div class="navbar-brand">
             <a class="navbar-item" href="/">
                 <h1 class="Logo px-4">
@@ -66,12 +70,10 @@
             <div class="navbar-end">
                 <!-- search bar -->
                 <div class="mx-5 my-5">
-                    <form>
-                        <div class="search">
-                            <span class="search-icon material-symbols-outlined">search</span>
-                            <input class="search-input" type="search" placeholder="Search">
-                        </div>
-                    </form>
+                    <div class="search">
+                        <span class="search-icon material-symbols-outlined" onclick="search_images()">search</span>
+                        <input class="search-input" type="search" placeholder="Search" onkeydown="search_images()">
+                    </div>
                 </div>
                 <div class="mx-5 my-5">
                     <figure class="profile-pic sidebar-listener" id="user-profile-picture">
@@ -96,8 +98,7 @@
                     <p class="is-size-7 has-text-weight-light">About</p>
                     <div>
                         <p id="sidebar-user-about">...</p>
-                        <img width="17" height="17" src="../static/assets/edit-2.svg"
-                            alt="Edit icon">
+                        <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon">
                     </div>
                 </div>
                 <!-- Max 30 character -->
@@ -105,8 +106,7 @@
                     <p class="is-size-7 has-text-weight-light">Gender</p>
                     <div>
                         <p id="sidebar-user-gender">N/A</p>
-                        <img width="17" height="17" src="../static/assets/edit-2.svg"
-                            alt="Edit icon">
+                        <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon">
                     </div>
                 </div>
                 <hr class="separator">
@@ -119,14 +119,14 @@
                     </span>
                 </div>
                 <div class="mt-4">
-                    <span class="icon-text" onclick="window.location.href = '/';">
+                    <span class="icon-text" onclick="window.location.href = '/my-gallery';">
                         <span class="icon">
                             <i class="fa-regular fa-images"></i>
                         </span>
                         <span>My Gallery</span>
                     </span>
                 </div>
-                <div class="bottom-content">
+                <div class="bottom-content" onclick="logout_account()">
                     <span class="icon-text">
                         <span class="icon">
                             <i class="fa-solid fa-right-from-bracket"></i>
@@ -148,38 +148,82 @@
             <div class="modal-content has-background-white py-5 px-5">
                 <h3 class="title mb-6">Upload</h3>
                 <!-- isi dalam upload -->
-                <form>
-                    <div class="field">
-                        <div class="file is-normal">
-                            <label class="file-label">
-                                <input class="file-input" type="file" name="resume">
-                                <span class="file-cta">
-                                    <span class="file-icon">
-                                        <i class="fas fa-upload"></i>
-                                    </span>
-                                    <span class="file-label">
-                                        Upload Image
-                                    </span>
+                <div class="field">
+                    <div class="file is-normal has-name" id="file-upload-images-div">
+                        <label class="file-label">
+                            <input class="file-input" type="file" id="file-input-upload">
+                            <span class="file-cta">
+                                <span class="file-icon">
+                                    <i class="fas fa-upload"></i>
                                 </span>
-                            </label>
+                                <span class="file-label">
+                                    Upload Image
+                                </span>
+                            </span>
+                            <span class="file-name"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Judul</label>
+                    <div class="control">
+                        <input class="input is-link" type="text" placeholder="Judul" id="judul-upload">
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Deskripsi</label>
+                    <div class="control">
+                        <input class="input is-link" type="text" placeholder="Deskripsi" id="deskripsi-upload">
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Kategori</label>
+                    <div class="control">
+                        <div class="columns is-mobile is-multiline" id="kategori-picker-upload">
+                            <div class="column is-narrow">
+                                <span class="tag tags-list-unique is-success" id="all-tags"
+                                    onclick="toggleTags('all-tags','All');">
+                                    All
+                                    <button class="delete is-small" id="delete-tags-kategori-All"></button>
+                                </span>
+                            </div>
+                            <div class="column is-narrow">
+                                <span class="tag tags-list-unique is-danger" id="teknologi-tags"
+                                    onclick="toggleTags('teknologi-tags','Teknologi');">
+                                    Teknologi
+                                </span>
+                            </div>
+                            <div class="column is-narrow">
+                                <span class="tag tags-list-unique is-danger" id="hewan-tags"
+                                    onclick="toggleTags('hewan-tags','Hewan');">
+                                    Hewan
+                                </span>
+                            </div>
+                            <div class="column is-narrow">
+                                <span class="tag tags-list-unique is-danger" id="makanan-tags"
+                                    onclick="toggleTags('makanan-tags','Makanan');">
+                                    Makanan
+                                </span>
+                            </div>
+                            <div class="column is-narrow">
+                                <span class="tag tags-list-unique is-danger" id="alam-tags"
+                                    onclick="toggleTags('alam-tags','Alam');">
+                                    Alam
+                                </span>
+                            </div>
+                            <div class="column is-narrow">
+                                <span class="tag tags-list-unique is-danger" id="orang-tags"
+                                    onclick="toggleTags('orang-tags','Orang');">
+                                    Orang
+                                </span>
+                            </div>
                         </div>
                     </div>
-                    <div class="field">
-                        <label class="label">Judul</label>
-                        <div class="control">
-                            <input class="input is-link" type="text" placeholder="Judul">
-                        </div>
-                    </div>
-                    <div class="field">
-                        <label class="label">Deskripsi</label>
-                        <div class="control">
-                            <input class="input is-link" type="text" placeholder="Deskripsi">
-                        </div>
-                    </div>
-                    <div class="mt-6 has-text-centered">
-                        <button class="button is-link is-outlined">Save</button>
-                    </div>
-                </form>
+                </div>
+
+                <div class="mt-6 has-text-centered" id="button-save-upload-image">
+                    <button class="button is-link is-outlined" onclick="upload_button()">Save</button>
+                </div>
             </div>
             <button class="modal-close is-large" aria-label="close"></button>
         </div>
@@ -187,7 +231,7 @@
             <div class="grid container-masonry" id="gallery">
                 {% for data in images %}
                 <!-- Gallery items will be dynamically added here -->
-                <div class="card my-2 mx-2 modal-button" data-target="modal-image-{{ data['_id']}}">
+                <div class="card my-2 mx-2 modal-button grid-items-masonry" data-target="modal-image-{{ data['_id']}}">
                     <div class="card-image">
                         <img src="{{ data['image_thumbnail'] }}" alt="Photos by {{ data['username'] }}"
                             style="width: 200px;" class="view-image">
@@ -197,33 +241,78 @@
             </div>
         </div>
         <!-- Image modal-->
-        {% for data in images %}
-        <div id="modal-image-{{ data['_id'] }}" class="modal modal-fx-superScaled">
-            <div class="modal-background">
-                <div class="mx-4 column box bottom-content has-text-centered">
-                    <span class="icon" onclick="alert('Bookmarked')">
-                        <i class="fa-regular fa-bookmark"></i>
-                        <i class="fa-solid fa-bookmark has-text-link"></i>
-                    </span>
-                    <span class="icon ml-4" onclick="alert('Liked')">
-                        <i class="fa-regular fa-heart"></i>
-                        <i class="fa-solid fa-heart has-text-danger"></i>
-                    </span>
-                    <span class="icon ml-4" onclick="alert('Commented')">
-                        <i class="fa-solid fa-comment"></i>
-                    </span>
+        <div id="modals-image-fullscreen">
+            {% for data in images %}
+            <div id="modal-image-{{ data['_id'] }}" class="modal modal-fx-superScaled">
+                <div class="modal-background">
+                    <div class="mx-4 column box bottom-content has-text-centered">
+                        <span class="icon" id="bookmark-icon-modals-fullscreen-{{ data['_id'] }}" onclick="toggleBookmark('{{ data['_id'] }}')">
+                            {% if data['bookmark_by_me'] %}
+                            <i class="fa-solid fa-bookmark has-text-link"></i>
+                            {% else %}
+                            <i class="fa-regular fa-bookmark"></i>
+                            {% endif %}
+                        </span>
+                        <span class="icon ml-4" id="heart-icon-modals-fullscreen-{{ data['_id'] }}" onclick="toggleLike('{{ data['_id'] }}')">
+                            {% if data['like_by_me'] %}
+                            <i class="fa-solid fa-heart has-text-danger"></i>
+                            {% else %}
+                            <i class="fa-regular fa-heart"></i>
+                            {% endif %}
+                        </span>
+                        <span class="icon ml-4" onclick="alert('Commented')">
+                            <i class="fa-solid fa-comment"></i>
+                        </span>
+                        {% if is_superadmin or data['username'] == current_username %}
+                        <span class="icon ml-4" onclick="alert('Deleted')">
+                            <i class="fa-solid fa-trash"></i>
+                        </span>
+                        {% endif %}
+                    </div>
                 </div>
+                <div class="modal-content is-image">
+                    <!-- src="{{ data['image_thumbnail'] }}" -->
+                    <img loading="lazy" class="lazy-load" src="{{ data['image'] }}"
+                        alt="Photos by {{ data['username'] }}">
+                </div>
+                <button class="modal-close is-large" aria-label="close"></button>
             </div>
-            <div class="modal-content is-image">
-                <!-- src="{{ data['image_thumbnail'] }}" -->
-                <img loading="lazy" class="lazy-load" src="{{ data['image'] }}" alt="Photos by {{ data['username'] }}">
-            </div>
-            <button class="modal-close is-large" aria-label="close"></button>
+            {% endfor %}
         </div>
-        {% endfor %}
+    </div>
+    <div class="container my-3">
+        <!-- next slide button -->
+        <nav class="pagination is-centered" role="navigation" aria-label="pagination" id="pagination-parent-nav">
+            {% if prev_page %}
+            <a href="/?query={{ query }}&page={{ prev_page }}" class="pagination-previous">Previous</a>
+            {% else %}
+            <a class="pagination-previous is-disabled">Previous</a>
+            {% endif %}
+            {% if next_page %}
+            <a href="/?query={{ query }}&page={{ next_page }}" class="pagination-next">Next page</a>
+            {% else %}
+            <a class="pagination-next is-disabled">Next page</a>
+            {% endif %}
+            <ul class="pagination-list">
+                <li><a href="/?query={{ query }}&page=1" class="pagination-link">1</a></li>
+
+                <li><span class="pagination-ellipsis">&hellip;</span></li>
+
+                {% if prev_page %}
+                <li><a href="/?query={{ query }}&page={{ prev_page }}" class="pagination-link">{{ prev_page }}</a></li>
+                {% endif %}
+                <li><a class="pagination-link is-current">{{ curr_page }}</a></li>
+                {% if next_page %}
+                <li><a href="/?query={{ query }}&page={{ next_page }}" class="pagination-link">{{ next_page }}</a></li>
+                {% endif %}
+
+                <li><span class="pagination-ellipsis">&hellip;</span></li>
+                <li><a href="/?query={{ query }}&page={{ end_page }}" class="pagination-link">{{ end_page }}</a></li>
+            </ul>
+        </nav>
     </div>
     <!-- Bulma modal js -->
-    <script src="https://unpkg.com/bulma-modal-fx/dist/js/modal-fx.min.js"></script>
+    <script src="../static/modal-fx.min.js"></script>
     <script>
         burger_function();
         $(document).ready(function () {
@@ -234,10 +323,11 @@
                 sidebar.toggleClass('is-active');
             });
             // Placeholder images untuk bikin rame doang
-            load_images();
+            // load_images();
             layout_masonry();
             render_users_infos();
             sidebar_listener();
+            file_upload_image_namer();
         });
     </script>
 </body>

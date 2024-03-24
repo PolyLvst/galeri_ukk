@@ -17,6 +17,10 @@
   <!-- Jquery -->
   <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4="
     crossorigin="anonymous"></script>
+  <!-- JQuery cookie -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"
+    integrity="sha512-3j3VU6WC5rPQB4Ld1jnLV7Kd5xr+cq9avvhwqzbH/taCRNURoeEpoPBK9pDyeukwSxwRPJ8fDgvYXd6SkaZ2TA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <!-- Custom js -->
   <script src="../static/myjs.js"></script>
   <!-- Bulma -->
@@ -32,7 +36,7 @@
 
 <body>
   <!-- Navbar -->
-  <nav class="navbar is-white has-shadow" role="navigation">
+  <nav class="navbar has-shadow" role="navigation">
     <div class="navbar-brand">
       <a class="navbar-item" href="/">
         <h1 class="Logo px-4">
@@ -61,12 +65,10 @@
       <div class="navbar-end">
         <!-- search bar -->
         <div class="mx-5 my-5">
-          <form>
-            <div class="search">
-              <span class="search-icon material-symbols-outlined">search</span>
-              <input class="search-input" type="search" placeholder="Search">
-            </div>
-          </form>
+          <div class="search">
+            <span class="search-icon material-symbols-outlined" onclick="search_images_redirect()">search</span>
+            <input class="search-input" type="search" placeholder="Search" onkeydown="search_images_redirect()">
+          </div>
         </div>
         <div class="mx-5 my-5">
           <figure class="profile-pic sidebar-listener" id="user-profile-picture">
@@ -112,14 +114,14 @@
           </span>
         </div>
         <div class="mt-4">
-          <span class="icon-text" onclick="window.location.href = '/';">
+          <span class="icon-text" onclick="window.location.href = '/my-gallery';">
             <span class="icon">
               <i class="fa-regular fa-images"></i>
             </span>
             <span>My Gallery</span>
           </span>
         </div>
-        <div class="bottom-content">
+        <div class="bottom-content" onclick="logout_account()">
           <span class="icon-text">
             <span class="icon">
               <i class="fa-solid fa-right-from-bracket"></i>
@@ -139,190 +141,198 @@
     <div class="modal-content has-background-white py-5 px-5">
       <h3 class="title mb-6">Upload</h3>
       <!-- isi dalam upload -->
-      <form>
-        <div class="field">
-          <div class="file is-normal">
-            <label class="file-label">
-              <input class="file-input" type="file" name="resume">
-              <span class="file-cta">
-                <span class="file-icon">
-                  <i class="fas fa-upload"></i>
-                </span>
-                <span class="file-label">
-                  Upload Image
-                </span>
+      <div class="field">
+        <div class="file is-normal has-name" id="file-upload-images-div">
+          <label class="file-label">
+            <input class="file-input" type="file" id="file-input-upload">
+            <span class="file-cta">
+              <span class="file-icon">
+                <i class="fas fa-upload"></i>
               </span>
-            </label>
+              <span class="file-label">
+                Upload Image
+              </span>
+            </span>
+            <span class="file-name"></span>
+          </label>
+        </div>
+      </div>
+      <div class="field">
+        <label class="label">Judul</label>
+        <div class="control">
+          <input class="input is-link" type="text" placeholder="Judul" id="judul-upload">
+        </div>
+      </div>
+      <div class="field">
+        <label class="label">Deskripsi</label>
+        <div class="control">
+          <input class="input is-link" type="text" placeholder="Deskripsi" id="deskripsi-upload">
+        </div>
+      </div>
+      <div class="field">
+        <label class="label">Kategori</label>
+        <div class="control">
+          <div class="columns is-mobile is-multiline" id="kategori-picker-upload">
+            <div class="column is-narrow">
+              <span class="tag tags-list-unique is-success" id="all-tags" onclick="toggleTags('all-tags','All');">
+                All
+                <button class="delete is-small" id="delete-tags-kategori-All"></button>
+              </span>
+            </div>
+            <div class="column is-narrow">
+              <span class="tag tags-list-unique is-danger" id="teknologi-tags"
+                onclick="toggleTags('teknologi-tags','Teknologi');">
+                Teknologi
+              </span>
+            </div>
+            <div class="column is-narrow">
+              <span class="tag tags-list-unique is-danger" id="hewan-tags" onclick="toggleTags('hewan-tags','Hewan');">
+                Hewan
+              </span>
+            </div>
+            <div class="column is-narrow">
+              <span class="tag tags-list-unique is-danger" id="makanan-tags"
+                onclick="toggleTags('makanan-tags','Makanan');">
+                Makanan
+              </span>
+            </div>
+            <div class="column is-narrow">
+              <span class="tag tags-list-unique is-danger" id="alam-tags" onclick="toggleTags('alam-tags','Alam');">
+                Alam
+              </span>
+            </div>
+            <div class="column is-narrow">
+              <span class="tag tags-list-unique is-danger" id="orang-tags" onclick="toggleTags('orang-tags','Orang');">
+                Orang
+              </span>
+            </div>
           </div>
         </div>
-        <div class="field">
-          <label class="label">Judul</label>
-          <div class="control">
-            <input class="input is-link" type="text" placeholder="Judul">
-          </div>
-        </div>
-        <div class="field">
-          <label class="label">Deskripsi</label>
-          <div class="control">
-            <input class="input is-link" type="text" placeholder="Deskripsi">
-          </div>
-        </div>
-        <div class="mt-6 has-text-centered">
-          <button class="button is-link is-outlined">Save</button>
-        </div>
-      </form>
+      </div>
+
+      <div class="mt-6 has-text-centered" id="button-save-upload-image">
+        <button class="button is-link is-outlined" onclick="upload_button()">Save</button>
+      </div>
     </div>
     <button class="modal-close is-large" aria-label="close"></button>
   </div>
 
   <!-- Card -->
   <div class="container">
-    <div class="columns is-multiline">
+    <div class="columns is-multiline mx-4">
 
+      {% for data in images %}
       <div class="column is-3">
 
         <div class="card">
-          <div class="card-image">
+          <div class="card-image modal-button" style="overflow: hidden;" data-target="modal-image-{{ data['_id']}}">
             <figure class="image is-4by3">
-              <img src="https://diary-polylvst.glitch.me/static/img_title/upload-Friday-03-Mar-2023-23-36-26.png"
-                alt="Placeholder image">
+              <img src="{{ data['image_thumbnail'] }}" alt="Photos by {{ data['username'] }}"
+                style="object-fit: cover;">
             </figure>
           </div>
           <div class="card-content">
             <div class="media">
               <div class="media-content">
-                <p class="title is-4">John Smith</p>
-                <p class="subtitle is-6">@johnsmith</p>
+                <p class="title is-4">{{ data['title'] }}</p>
+                <p class="subtitle is-6">@{{ data['username'] }}</p>
               </div>
-            </div>
-            <div class="media-content">
-              <p class="title is-4">John Smith</p>
-              <p class="subtitle is-6">@johnsmith</p>
             </div>
           </div>
 
           <div class="content px-3 py-3">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-            Phasellus nec iaculis mauris. <a>@bulmaio</a>.
-            <a href="#">#css</a> <a href="#">#responsive</a>
-            <br>
-            <time datetime="2016-1-1">11:09 PM - 1 Jan 2016</time>
+            {{ data['deskripsi'] }}
+
+            {% for kategori in data['kategori'].split(',') %}
+            {% if kategori %}
+            <a>#{{ kategori }} </a>
+            {% endif %}
+            {% endfor %}
+            <!-- <br> -->
+            <!-- <time datetime="2016-1-1">11:09 PM - 1 Jan 2016</time> -->
           </div>
         </div>
 
       </div>
-
-      <div class="column is-3">
-
-        <div class="card">
-          <div class="card-image">
-            <figure class="image is-4by3">
-              <img src="https://bulma.io/assets/images/placeholders/128x128.png" alt="Placeholder image">
-            </figure>
-          </div>
-          <div class="card-content">
-            <div class="media">
-              <div class="media-content">
-                <p class="title is-4">John Smith</p>
-                <p class="subtitle is-6">@johnsmith</p>
-              </div>
-            </div>
-            <div class="media-content">
-              <p class="title is-4">John Smith</p>
-              <p class="subtitle is-6">@johnsmith</p>
-            </div>
-          </div>
-
-          <div class="content px-3 py-3">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-            Phasellus nec iaculis mauris. <a>@bulmaio</a>.
-            <a href="#">#css</a> <a href="#">#responsive</a>
-            <br>
-            <time datetime="2016-1-1">11:09 PM - 1 Jan 2016</time>
-          </div>
-        </div>
-
-      </div>
-
-      <div class="column is-3">
-
-        <div class="card">
-          <div class="card-image">
-            <figure class="image is-4by3">
-              <img src="https://bulma.io/assets/images/placeholders/128x128.png" alt="Placeholder image">
-            </figure>
-          </div>
-          <div class="card-content">
-            <div class="media">
-              <div class="media-content">
-                <p class="title is-4">John Smith</p>
-                <p class="subtitle is-6">@johnsmith</p>
-              </div>
-            </div>
-            <div class="media-content">
-              <p class="title is-4">John Smith</p>
-              <p class="subtitle is-6">@johnsmith</p>
-            </div>
-          </div>
-
-          <div class="content px-3 py-3">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-            Phasellus nec iaculis mauris. <a>@bulmaio</a>.
-            <a href="#">#css</a> <a href="#">#responsive</a>
-            <br>
-            <time datetime="2016-1-1">11:09 PM - 1 Jan 2016</time>
-          </div>
-        </div>
-
-      </div>
-
-      <div class="column is-3">
-
-        <div class="card">
-          <div class="card-image">
-            <figure class="image is-4by3">
-              <img src="https://bulma.io/assets/images/placeholders/128x128.png" alt="Placeholder image">
-            </figure>
-          </div>
-          <div class="card-content">
-            <div class="media">
-              <div class="media-content">
-                <p class="title is-4">John Smith</p>
-                <p class="subtitle is-6">@johnsmith</p>
-              </div>
-            </div>
-            <div class="media-content">
-              <p class="title is-4">John Smith</p>
-              <p class="subtitle is-6">@johnsmith</p>
-            </div>
-          </div>
-
-          <div class="content px-3 py-3">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-            Phasellus nec iaculis mauris. <a>@bulmaio</a>.
-            <a href="#">#css</a> <a href="#">#responsive</a>
-            <br>
-            <time datetime="2016-1-1">11:09 PM - 1 Jan 2016</time>
-          </div>
-        </div>
-
-      </div>
+      {% endfor %}
 
     </div>
+    <!-- next slide button -->
+    <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+      {% if prev_page %}
+      <a href="/blog?page={{ prev_page }}" class="pagination-previous">Previous</a>
+      {% else %}
+      <a class="pagination-previous is-disabled">Previous</a>
+      {% endif %}
+      {% if next_page %}
+      <a href="/blog?page={{ next_page }}" class="pagination-next">Next page</a>
+      {% else %}
+      <a class="pagination-next is-disabled">Next page</a>
+      {% endif %}
+      <ul class="pagination-list">
+        <li><a href="/blog?page=1" class="pagination-link">1</a></li>
+
+        <li><span class="pagination-ellipsis">&hellip;</span></li>
+
+        {% if prev_page %}
+        <li><a href="/blog?page={{ prev_page }}" class="pagination-link">{{ prev_page }}</a></li>
+        {% endif %}
+        <li><a class="pagination-link is-current">{{ curr_page }}</a></li>
+        {% if next_page %}
+        <li><a href="/blog?page={{ next_page }}" class="pagination-link">{{ next_page }}</a></li>
+        {% endif %}
+
+        <li><span class="pagination-ellipsis">&hellip;</span></li>
+        <li><a href="/blog?page={{ end_page }}" class="pagination-link">{{ end_page }}</a></li>
+      </ul>
+    </nav>
+  </div>
+  <!-- Image modal-->
+  <div id="modals-image-fullscreen">
+    {% for data in images %}
+    <div id="modal-image-{{ data['_id'] }}" class="modal modal-fx-superScaled">
+      <div class="modal-background">
+        <div class="mx-4 column box bottom-content has-text-centered">
+          <span class="icon" onclick="alert('Bookmarked')">
+            <i class="fa-regular fa-bookmark"></i>
+            <i class="fa-solid fa-bookmark has-text-link"></i>
+          </span>
+          <span class="icon ml-4" onclick="alert('Liked')">
+            <i class="fa-regular fa-heart"></i>
+            <i class="fa-solid fa-heart has-text-danger"></i>
+          </span>
+          <span class="icon ml-4" onclick="alert('Commented')">
+            <i class="fa-solid fa-comment"></i>
+          </span>
+          {% if is_superadmin or data['username'] == current_username %}
+          <span class="icon ml-4" onclick="alert('Deleted')">
+            <i class="fa-solid fa-trash"></i>
+          </span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="modal-content is-image">
+        <!-- src="{{ data['image_thumbnail'] }}" -->
+        <img loading="lazy" class="lazy-load" src="{{ data['image'] }}" alt="Photos by {{ data['username'] }}">
+      </div>
+      <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    {% endfor %}
   </div>
   <!-- Bulma modal js -->
-  <script src="https://unpkg.com/bulma-modal-fx/dist/js/modal-fx.min.js"></script>
+  <script src="../static/modal-fx.min.js"></script>
   <script>
-    // upload_listener();
     burger_function();
     $(document).ready(function () {
       const sidebar = $('#sidebar');
       const sidebarToggle = $('#sidebarToggle');
+
       sidebarToggle.click(function () {
         sidebar.toggleClass('is-active');
       });
       render_users_infos();
       sidebar_listener();
+      file_upload_image_namer();
     });
   </script>
 </body>

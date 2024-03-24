@@ -1,8 +1,6 @@
-from flask import Flask, redirect,render_template,jsonify,request,send_file, url_for
+from flask import Flask,jsonify,request
 from werkzeug.utils import secure_filename
-from datetime import datetime, timedelta
 from dotenv import load_dotenv
-from PIL import Image
 import jwt
 import os
 
@@ -12,10 +10,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 TOKEN = 'token'
 
 app = Flask(__name__)
-app.config['TEMPLATES_AUTO_RELOAD'] = True
 
-# JWT Token exp
-Expired_Seconds = 60 * 60 * 24 # 24 Hour / 86400 seconds
 allowed_ext = {'png', 'jpg', 'jpeg', 'gif'}
 # Filter extensi file yang diterima
 def check_ext(extension:str):
@@ -33,7 +28,7 @@ def check_folders():
 
 @app.route("/")
 def home():
-    return "Flask page not found",404
+    return jsonify({"msg":"Still awake"})
 
 @app.route("/api/images/save",methods=["POST"])
 def save_image():
@@ -59,9 +54,9 @@ def save_image():
         extension = os.path.splitext(filename)[-1].replace('.','')
         if not check_ext(extension):
             return jsonify({"msg":"Extension not allowed"}),406 # Not acceptable
-        unique_format = f"{filename}"
-        file_path = f"{file_path_receive}/{unique_format}"
-        file_save_path = f"./static/{file_path}"
+        unique_format = filename
+        file_path = file_path_receive+"/"+unique_format
+        file_save_path = "./static/"+file_path
 
         # Simpan file ke folder temp
         file.save(file_save_path)
@@ -86,7 +81,7 @@ def delete_image():
         return "Unauthorized",401
     # Jika payload terverifikasi maka kode dibawah akan di execute
     file_path = request.form.get("file_path")
-    file_location = f"./static/{file_path}"
+    file_location = "./static/"+file_path
 
     if os.path.exists(file_location):
         os.remove(file_location)
@@ -97,4 +92,4 @@ def delete_image():
 if __name__ == "__main__":
     # Cek apakah folder tersedia
     check_folders()
-    app.run("0.0.0.0",5000,True)
+    app.run("localhost",5000,True)
