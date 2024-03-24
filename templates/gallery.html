@@ -21,16 +21,47 @@
     <script src="../static/myjs.js"></script>
     <!-- Bulma -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css;">
+    <!-- Bulma modal css -->
+    <link rel="stylesheet" href="https://unpkg.com/bulma-modal-fx/dist/css/modal-fx.min.css" />
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
         integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <title>Helios | Bookmarks</title>
+    <title>Helios | Gallery</title>
+
+    <style>
+        .separator {
+            border-top: 1px solid #084168;
+            /* Ubah warna dan properti sesuai kebutuhan */
+
+            width: 98%;
+            margin: 20px auto;
+        }
+
+        .center {
+            display: flex;
+            align-items: center;
+        }
+
+        .column-mygallery {
+            display: flex;
+            align-items: center;
+        }
+
+        .my-column-mygallery img {
+            margin-right: 8px;
+        }
+
+        .columns-mygallery {
+            max-width: 1000px;
+        }
+    </style>
+
 </head>
 
 <body>
     <!-- Navbar -->
-    <nav class="navbar is-white has-shadow" role="navigation">
+    <nav class="navbar" role="navigation">
         <div class="navbar-brand">
             <a class="navbar-item" href="/">
                 <h1 class="Logo px-4">
@@ -52,7 +83,7 @@
                 <a class="navbar-item" href="/about">
                     About us
                 </a>
-                <a class="navbar-item" href="/blog">
+                <a class="navbar-item has-text-weight-bold" href="/blog">
                     Blog
                 </a>
             </div>
@@ -103,7 +134,7 @@
                     </div>
                 </div>
                 <hr class="separator">
-                <div class="mt-4" onclick="window.location.href = '/bookmarks';">
+                <div class="mt-4">
                     <span class="icon-text">
                         <span class="icon">
                             <i class="fa-solid fa-bookmark"></i>
@@ -112,7 +143,7 @@
                     </span>
                 </div>
                 <div class="mt-4">
-                    <span class="icon-text" onclick="window.location.href = '/';">
+                    <span class="icon-text">
                         <span class="icon">
                             <i class="fa-regular fa-images"></i>
                         </span>
@@ -130,81 +161,72 @@
             </div>
         </div>
     </div>
-
-    <!-- Card -->
-    <hr class="separator">
-    <div class="container">
-        <div class="columns is-multiline">
-            <div class="column is-3">
-                <div class="image-grid-item">
-                    <img src="https://bulma.io/images/placeholders/96x96.png" alt="Image 1">
-                </div>
-            </div>
-            <div class="column is-3">
-                <div class="image-grid-item">
-                    <img src="https://bulma.io/images/placeholders/96x96.png" alt="Image 1">
-                </div>
-            </div>
-            <div class="column is-3">
-                <div class="image-grid-item">
-                    <img src="https://bulma.io/images/placeholders/96x96.png" alt="Image 1">
-                </div>
-            </div>
-            <div class="column is-3">
-                <div class="image-grid-item">
-                    <img src="https://bulma.io/images/placeholders/96x96.png" alt="Image 1">
-                </div>
-            </div>
-            <!-- Add more columns with image-grid-item for each image -->
-        </div>
-        <!-- next slide button -->
-        <nav class="pagination mx-4" role="navigation" aria-label="pagination">
-            <a class="pagination-previous is-disabled" title="This is the first page">Previous</a>
-            <a href="#" class="pagination-next">Next page</a>
-            <ul class="pagination-list">
-                <li>
-                    <a class="pagination-link is-current" aria-label="Page 1" aria-current="page">1</a>
-                </li>
-                <li>
-                    <a href="#" class="pagination-link" aria-label="Goto page 2">2</a>
-                </li>
-                <li>
-                    <a href="#" class="pagination-link" aria-label="Goto page 3">3</a>
-                </li>
-            </ul>
-        </nav>
-
-        <!-- <div class="columns">
-                <div class="column is-1">
-                    <figure class="image is-96x96">
-                        <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image">
-                    </figure>
-                    <figure class="image is-96x96 mt-1">
-                        <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image">
-                    </figure>
-                </div>
-                <div class="column is-1 ml-1">
-                    <figure class="image is-96x96">
-                        <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image">
-                    </figure>
-                    <figure class="image is-96x96 mt-1">
-                        <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image">
-                    </figure>
-                </div>
-        </div> -->
+    <div class="has-text-weight-light column is-narrow">
+        <hr class="separator "> <!-- Menggunakan kelas "separator" untuk garis panjang -->
     </div>
-    <script>
-        burger_function();
-        $(document).ready(function () {
-            const sidebar = $('#sidebar');
-            const sidebarToggle = $('#sidebarToggle');
+    <div class="columns ml-6 -center">
+        <div class="column column-mygallery my-column-mygallery is-4">
+            <img class="py-2" src="../static/defaults/archive-add.png" alt="gambar Bookmarks"> Bookmarks
+        </div>
+        <div class="column column-mygallery my-column-mygallery is-4">
+            <img src="../static/defaults/gallery.png" alt="gambar my gallery">
+            My Gallery
+        </div>
+    </div>
+    <div class="columns mx-6 is-centered is-multiline">
+        <div class="column is-3">
+            <figure class="image is-square">
+                <img class="image" src="../static/defaults/Jungle_Expanse_02_3840x2160.png" alt="gambar Bookmarks">
+            </figure>
+        </div>
+        <div class="column is-3">
+            <figure class="image is-square">
+                <img class="image" src="../static/defaults/Jungle_Expanse_02_3840x2160.png" alt="gambar Bookmarks">
+            </figure>
+        </div>
+        <div class="column is-3">
+            <figure class="image is-square">
+                <img class="image" src="../static/defaults/Jungle_Expanse_02_3840x2160.png" alt="gambar Bookmarks">
+            </figure>
+        </div>
+        <div class="column is-3">
+            <figure class="image is-square">
+                <img class="image" src="../static/defaults/Jungle_Expanse_02_3840x2160.png" alt="gambar Bookmarks">
+            </figure>
+        </div>
+    </div>
+    <div class="mx-5">
+        <!-- next slide button -->
+    <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+        {% if prev_page %}
+        <a href="/blog?page={{ prev_page }}" class="pagination-previous">Previous</a>
+        {% else %}
+        <a class="pagination-previous is-disabled">Previous</a>
+        {% endif %}
+        {% if next_page %}
+        <a href="/blog?page={{ next_page }}" class="pagination-next">Next page</a>
+        {% else %}
+        <a class="pagination-next is-disabled">Next page</a>
+        {% endif %}
+        <ul class="pagination-list">
+          <li><a href="/blog?page=1" class="pagination-link">1</a></li>
+  
+          <li><span class="pagination-ellipsis">&hellip;</span></li>
+  
+          {% if prev_page %}
+          <li><a href="/blog?page={{ prev_page }}" class="pagination-link">{{ prev_page }}</a></li>
+          {% endif %}
+          <li><a class="pagination-link is-current">{{ curr_page }}</a></li>
+          {% if next_page %}
+          <li><a href="/blog?page={{ next_page }}" class="pagination-link">{{ next_page }}</a></li>
+          {% endif %}
+  
+          <li><span class="pagination-ellipsis">&hellip;</span></li>
+          <li><a href="/blog?page={{ end_page }}" class="pagination-link">{{ end_page }}</a></li>
+        </ul>
+      </nav>
+    </div>
 
-            sidebarToggle.click(function () {
-                sidebar.toggleClass('is-active');
-            });
-            render_users_infos();
-        });
-    </script>
 </body>
 
 </html>
