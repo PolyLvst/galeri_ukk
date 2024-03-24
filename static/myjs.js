@@ -404,9 +404,10 @@ function file_upload_image_namer() {
 }
 function toggleLike(id) {
     event.stopPropagation();
-    const heartLike = $('#heart-icon-modals-fullscreen-' + id);
+    const heartLike = $('span#heart-icon-modals-fullscreen-' + id);
     heartLike.empty();
     heartLike.append(`<i class="fas fa-spinner fa-spin"></i>`);
+    incrementLikes(`${id}`);
     $.ajax({
         url: "/api/like",
         type: "POST",
@@ -423,9 +424,27 @@ function toggleLike(id) {
         }
     })
 }
+// Untuk page comments
+function incrementLikes(id) {
+    const spanCounter = $('#like-count-post');
+
+    if (spanCounter.hasClass('has-text-danger')) {
+        spanCounter.removeClass('has-text-danger');
+        spanCounter.addClass('has-text-link');
+        $('#like-count-post').text(function (i, text) {
+            return parseInt(text) - 1;
+        });
+    } else {
+        spanCounter.removeClass('has-text-link');
+        spanCounter.addClass('has-text-danger');
+        $('#like-count-post').text(function (i, text) {
+            return parseInt(text) + 1;
+        });
+    }
+}
 function toggleBookmark(id) {
     event.stopPropagation();
-    const bookmarkIcon = $('#bookmark-icon-modals-fullscreen-' + id);
+    const bookmarkIcon = $('span#bookmark-icon-modals-fullscreen-' + id);
     bookmarkIcon.empty();
     bookmarkIcon.append(`<i class="fas fa-spinner fa-spin"></i>`);
     $.ajax({
@@ -458,6 +477,57 @@ function deleteImage(id) {
         },
         success: function (response) {
             window.location.href = '/';
+        }
+    })
+}
+// function changeBookmarkCollection() {
+
+// }
+function uploadComment(post_id = '') {
+    let commentInput = $("#input-text-area-comment");
+    let commentGive = commentInput.val();
+    if (post_id == '' || commentGive == '') {
+        commentInput.removeClass("is-info");
+        commentInput.addClass("is-danger");
+        commentInput.focus();
+    }
+    const divProgressUpload = $('#hidden-comment-upload-progress');
+    divProgressUpload.append('<progress class="progress is-small is-link my-3" max="100">Uploading</progress>');
+    commentInput.removeClass("is-danger");
+    commentInput.addClass("is-info");
+    $.ajax({
+        url: "/api/comment/create",
+        type: "POST",
+        data: {
+            "comment_give": commentGive,
+            "post_id_give": post_id
+        },
+        success: function (response) {
+            if (response["status"] == "created") {
+                window.location.reload();
+            } else {
+                alert('Something went wrong ' + response["msg"]);
+            }
+        }
+    })
+}
+function deleteComment(comment_id) {
+    event.stopPropagation();
+    const deleteIcon = $('#delete-icon-comment-' + comment_id);
+    deleteIcon.empty();
+    deleteIcon.append(`<i class="fas fa-spinner fa-spin"></i>`);
+    $.ajax({
+        url: "/api/comment/delete",
+        type: "DELETE",
+        data: {
+            "comment_id_give": comment_id,
+        },
+        success: function (response) {
+            if (response["status"] == "deleted") {
+                window.location.reload();
+            } else {
+                alert('Something went wrong ' + response["msg"]);
+            }
         }
     })
 }
