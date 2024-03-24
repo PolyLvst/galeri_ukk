@@ -41,7 +41,9 @@ db = client[DB_NAME]
 # Collection
 table_users = db.users
 table_photos = db.photos
+table_saved_collection = db.saved_collection
 table_bookmarks = db.bookmarks
+table_liked = db.liked
 
 # JWT Token exp
 Expired_Seconds = 60 * 60 * 24 # 24 Hour / 86400 seconds
@@ -183,6 +185,18 @@ def search_images_query(query:str=''):
             results.append(image)
     return results
 
+def count_like_images(posts:list,username:str):
+    idx = 0
+    for post in posts:
+        post_id = str(post['_id'])
+        posts[idx]['count_like'] = table_liked.count_documents({'post_id':post_id,'type':'like'})
+        posts[idx]['like_by_me'] = bool(table_liked.find_one({'post_id':post_id,'type':'like','username':username}))
+
+        bookmark_by_me = table_bookmarks.find_one({'post_id':post_id,'username':username})
+        posts[idx]['bookmark_by_me'] = bool(bookmark_by_me)
+        # post['saved_in_collection'] = bool(table_saved_collection.find_one({'_id':ObjectId(bookmark_by_me.get('collection_id')),'username':username}))
+        idx+=1
+    return posts
 # -------------- ENDPOINT -------------- #
 
 @app.get("/")
@@ -229,6 +243,7 @@ def home():
 
         # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
         photos = list(table_photos.find({}).sort("_id",-1).skip(skip=skip).limit(limit=per_page))
+    photos = count_like_images(posts=photos,username=username)
     idx = 0
     for doc in photos:
         photos[idx]["_id"] = str(doc["_id"])
@@ -268,6 +283,44 @@ def bookmarks():
     bookmarks = list(table_bookmarks.find({"username":username},{"_id":False, "bookmarks": {"$slice": bookmarks_preview_amount}}).sort("_id",-1).limit(limit=bookmarks_collection_amount))
     return jsonify({"data":bookmarks})
     # return render_template('bookmarks.html')
+
+@app.post("/api/bookmark")
+def update_bookmark():
+    # Ambil cookie
+    token_receive = request.cookies.get(TOKEN)
+    try:
+        # Buka konten cookie
+        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        username = payload["username"]
+        # Payload terverifikasi
+        pass
+    except jwt.ExpiredSignatureError:
+        # Sesinya sudah lewat dari 24 Jam
+        msg = 'Your session has expired'
+        return redirect(url_for('login_fn',msg=msg))
+    except jwt.exceptions.DecodeError:
+        # Tidak ada token
+        msg = 'Something wrong happens'
+        return redirect(url_for('login_fn',msg=msg))
+    # Jika payload terverifikasi maka kode dibawah akan di execute
+    post_id = request.form.get('post_id_give','')
+    collection_id = request.form.get('collection_id_give','')
+
+    bookmark = table_bookmarks.find_one_and_delete({"username":username,"post_id":ObjectId(post_id)})
+    collection = table_saved_collection.find_one({"_id":ObjectId(collection_id)})
+    if bookmark:
+        return jsonify({"msg":"Bookmark deleted","status":"deleted"})
+    if not collection:
+        return jsonify({"msg":"Collection not found","status":"not found"}),404
+    
+    doc = {
+        "post_id":post_id,
+        "username":username,
+        "collection_id":collection_id,
+        "date":datetime.now().strftime("%d-%m-%y %H:%M:%S")
+    }
+    table_bookmarks.insert_one(doc)
+    return jsonify({"msg":"Bookmarked","status":"created"})
 
 @app.get("/bookmarks")
 def bookmarks_page():
@@ -466,6 +519,7 @@ def get_images():
     try:
         # Buka konten cookie
         payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        username = payload['username']
         # Payload terverifikasi
         pass
     except jwt.ExpiredSignatureError:
@@ -486,6 +540,7 @@ def get_images():
 
     # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
     photos = list(table_photos.find({}).sort("_id",-1).skip(skip=skip).limit(limit=per_page))
+    photos = count_like_images(posts=photos,username=username)
     idx = 0
     for doc in photos:
         photos[idx]["_id"] = str(doc["_id"])
@@ -732,11 +787,25 @@ def sign_up():
 # Sign in untuk mendapat token JWT
 @app.post("/api/sign_in")
 def sign_in():
-    username_receive = request.form.get('username_give')
-    password_receive = request.form.get('password_give')
+    username_receive = request.form.get('username_give','')
+    password_receive = request.form.get('password_give','')
     # Mencari user dengan username tsb
     user_from_db = table_users.find_one({"username":username_receive})
     salted_password = hash_salt_password(password_receive)
+    if username_receive == '' or password_receive == '':
+        # Compare digest digunakan untuk mencegah timing attack
+        secrets.compare_digest(salted_password,salted_password)
+        # Login salah
+        return jsonify({
+            "result":"fail", "msg":"Cannot find user with that username and password combination",
+        }),404 # Not found
+    if not user_from_db:
+        # Compare digest digunakan untuk mencegah timing attack
+        secrets.compare_digest(salted_password,salted_password)
+        # Login salah
+        return jsonify({
+            "result":"fail", "msg":"Cannot find user with that username and password combination",
+        }),404 # Not found
     # Compare digest digunakan untuk mencegah timing attack
     is_correct_username = secrets.compare_digest(user_from_db.get("username"), username_receive)
     is_correct_password = secrets.compare_digest(user_from_db.get("password"), salted_password)

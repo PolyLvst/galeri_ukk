@@ -13,11 +13,16 @@ DelayAwake = 1 * 60 # 1 Menit
 
 def call_storage():
     while True:
-        response = requests.get(StorageURL)
-        if response.status_code:
-            print(f"# Storage responded at : {datetime.now()} | msg : {response.text}")
-        print(f"Waiting {DelayAwake}s ...")
-        time.sleep(DelayAwake)
+        try:
+            response = requests.get(StorageURL)
+            if response.status_code:
+                print(f"# Storage responded at : {datetime.now()} | msg : {response.text}")
+            print(f"Waiting {DelayAwake}s ...")
+            time.sleep(DelayAwake)
+        except Exception as e:
+            print(e)
+            print("# Error trying again in 60s ... ")
+            time.sleep(DelayAwake)
 
 if __name__ == "__main__":
     print("# Keep alive storage started ... ")

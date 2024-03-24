@@ -1,12 +1,5 @@
-.poppins-medium {
+* {
     font-family: "Poppins", sans-serif;
-    font-weight: 500;
-    font-style: normal;
-}
-
-body {
-    font-family: Poppins;
-    font-weight: 10px;
 }
 
 html,
@@ -14,16 +7,25 @@ body {
     overflow: hidden;
 }
 
+.biru-nav {
+    color: rgba(8, 65, 104, 1);
+    font-weight: 500;
+}
+
+.Logo {
+    color: rgba(53, 86, 108, 1);
+    font-weight: 700;
+    font-size: 37px;
+    size: 48px;
+    line-height: 72px;
+    width: 166px;
+    height: 72px;
+}
+
 .background {
     width: 100%;
     height: 300px;
     background-size: 90% 90%;
     background-position: center top;
-}
-
-.poppins-medium {
-    font-family: "Poppins", sans-serif;
-    font-weight: 700;
-    font-style: normal;
 }
 
