@@ -150,8 +150,11 @@ def check_superadmin():
         print(f"# User : helios-ruler")
         print(f"# Password : {pw}")
 
-def get_pagination_count(items_per_page=20,page=1):
-    total_items = table_photos.count_documents({})  # Total number of items in the collection
+def get_pagination_count(items_per_page=20,page=1,username=None):
+    if username:
+        total_items = table_photos.count_documents({"username":username})  # Total number of items in the collection
+    else:
+        total_items = table_photos.count_documents({})  # Total number of items in the collection
     total_pages = math.ceil(total_items / items_per_page)
 
     skip = (page - 1) * items_per_page
@@ -189,11 +192,21 @@ def count_like_images(posts:list,username:str):
     idx = 0
     for post in posts:
         post_id = str(post['_id'])
-        posts[idx]['count_like'] = table_liked.count_documents({'post_id':post_id,'type':'like'})
-        posts[idx]['like_by_me'] = bool(table_liked.find_one({'post_id':post_id,'type':'like','username':username}))
+        posts[idx]['count_like'] = table_liked.count_documents({'post_id':post_id})
+        posts[idx]['like_by_me'] = bool(table_liked.find_one({'post_id':post_id,'username':username}))
 
         bookmark_by_me = table_bookmarks.find_one({'post_id':post_id,'username':username})
         posts[idx]['bookmark_by_me'] = bool(bookmark_by_me)
+        # post['saved_in_collection'] = bool(table_saved_collection.find_one({'_id':ObjectId(bookmark_by_me.get('collection_id')),'username':username}))
+        idx+=1
+    return posts
+
+def images_social(posts:list,username:str):
+    idx = 0
+    for post in posts:
+        post_id = str(post['_id'])
+        posts[idx]['like_by_me'] = bool(table_liked.find_one({'post_id':post_id,'username':username}))
+        posts[idx]['bookmark_by_me'] = bool(table_bookmarks.find_one({'post_id':post_id,'username':username}))
         # post['saved_in_collection'] = bool(table_saved_collection.find_one({'_id':ObjectId(bookmark_by_me.get('collection_id')),'username':username}))
         idx+=1
     return posts
@@ -243,7 +256,7 @@ def home():
 
         # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
         photos = list(table_photos.find({}).sort("_id",-1).skip(skip=skip).limit(limit=per_page))
-    photos = count_like_images(posts=photos,username=username)
+    photos = images_social(posts=photos,username=username)
     idx = 0
     for doc in photos:
         photos[idx]["_id"] = str(doc["_id"])
@@ -306,7 +319,7 @@ def update_bookmark():
     post_id = request.form.get('post_id_give','')
     collection_id = request.form.get('collection_id_give','')
 
-    bookmark = table_bookmarks.find_one_and_delete({"username":username,"post_id":ObjectId(post_id)})
+    bookmark = table_bookmarks.find_one_and_delete({"username":username,"post_id":post_id})
     collection = table_saved_collection.find_one({"_id":ObjectId(collection_id)})
     if bookmark:
         return jsonify({"msg":"Bookmark deleted","status":"deleted"})
@@ -321,6 +334,39 @@ def update_bookmark():
     }
     table_bookmarks.insert_one(doc)
     return jsonify({"msg":"Bookmarked","status":"created"})
+
+@app.post("/api/like")
+def update_like():
+    # Ambil cookie
+    token_receive = request.cookies.get(TOKEN)
+    try:
+        # Buka konten cookie
+        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        username = payload["username"]
+        # Payload terverifikasi
+        pass
+    except jwt.ExpiredSignatureError:
+        # Sesinya sudah lewat dari 24 Jam
+        msg = 'Your session has expired'
+        return redirect(url_for('login_fn',msg=msg))
+    except jwt.exceptions.DecodeError:
+        # Tidak ada token
+        msg = 'Something wrong happens'
+        return redirect(url_for('login_fn',msg=msg))
+    # Jika payload terverifikasi maka kode dibawah akan di execute
+    post_id = request.form.get('post_id_give','')
+
+    liked = table_liked.find_one_and_delete({"username":username,"post_id":post_id})
+    if liked:
+        return jsonify({"msg":"Like deleted","status":"deleted"})
+    
+    doc = {
+        "post_id":post_id,
+        "username":username,
+        "date":datetime.now().strftime("%d-%m-%y %H:%M:%S")
+    }
+    table_liked.insert_one(doc)
+    return jsonify({"msg":"Liked","status":"created"})
 
 @app.get("/bookmarks")
 def bookmarks_page():
@@ -379,6 +425,7 @@ def search():
     next_page = page + 1 if page < total_pages else None
     # Batasi sesuai items per page
     results = results[:per_page]
+    results = images_social(posts=results,username=username)
     idx = 0
     for doc in results:
         results[idx]["_id"] = str(doc["_id"])
@@ -440,6 +487,8 @@ def gallery_page():
     try:
         # Buka konten cookie
         payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        username = payload['username']
+        is_superadmin = payload['is_superadmin']
         # Payload terverifikasi
         pass
     except jwt.ExpiredSignatureError:
@@ -451,7 +500,28 @@ def gallery_page():
         msg = 'Something wrong happens'
         return redirect(url_for('login_fn',msg=msg))
     # Jika payload terverifikasi maka kode dibawah akan di execute
-    return render_template('gallery.html')
+    items_per_page_home = 4
+
+    page = request.args.get('page', default=1, type=int)
+    per_page = request.args.get('per_page', default=items_per_page_home, type=int) # Number of items per page
+
+    skip,prev_page,next_page,end_page = get_pagination_count(items_per_page=per_page,page=page,username=username)
+
+    # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
+    photos = list(table_photos.find({"username":username}).sort("_id",-1).skip(skip=skip).limit(limit=per_page))
+    photos = images_social(posts=photos,username=username)
+    idx = 0
+    for doc in photos:
+        photos[idx]["_id"] = str(doc["_id"])
+        idx += 1
+    return render_template('gallery.html',
+                           images=photos,
+                           current_username=username,
+                           is_superadmin=is_superadmin,
+                           curr_page=page,
+                           prev_page=prev_page,
+                           next_page=next_page,
+                           end_page=end_page)
 
 @app.get("/about")
 def about_page():
@@ -540,7 +610,7 @@ def get_images():
 
     # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
     photos = list(table_photos.find({}).sort("_id",-1).skip(skip=skip).limit(limit=per_page))
-    photos = count_like_images(posts=photos,username=username)
+    photos = images_social(posts=photos,username=username)
     idx = 0
     for doc in photos:
         photos[idx]["_id"] = str(doc["_id"])

@@ -247,17 +247,25 @@ function search_images() {
                 <div id="modal-image-${results[idx]["_id"]}" class="modal modal-fx-superScaled">
                     <div class="modal-background">
                         <div class="mx-4 column box bottom-content has-text-centered">
-                            <span class="icon" onclick="alert('Bookmarked')">
-                                <i class="fa-regular fa-bookmark"></i>
-                                <i class="fa-solid fa-bookmark has-text-link"></i>
-                            </span>
-                            <span class="icon ml-4" onclick="alert('Liked')">
-                                <i class="fa-regular fa-heart"></i>
-                                <i class="fa-solid fa-heart has-text-danger"></i>
-                            </span>
-                            <span class="icon ml-4" onclick="alert('Commented')">
-                                <i class="fa-solid fa-comment"></i>
-                            </span>
+                            <span class="icon" id="bookmark-icon-modals-fullscreen-${results[idx]["_id"]}") onclick="toggleBookmark('${results[idx]["_id"]}')"">
+                `;
+                if (results[idx]["bookmark_by_me"]) {
+                    tempHtmlModals += `<i class="fa-solid fa-bookmark has-text-link"></i>`;
+                } else {
+                    tempHtmlModals += `<i class="fa-regular fa-bookmark"></i>`;
+                };
+                tempHtmlModals += `</span>
+                            <span class="icon ml-4" id="heart-icon-modals-fullscreen-${results[idx]["_id"]}" onclick="toggleLike('${results[idx]["_id"]}')"">
+                `;
+                if (results[idx]["like_by_me"]) {
+                    tempHtmlModals += `<i class="fa-solid fa-heart has-text-danger"></i>`;
+                } else {
+                    tempHtmlModals += `<i class="fa-regular fa-heart"></i>`;
+                };
+                tempHtmlModals += `</span>
+                                <span class="icon ml-4" onclick="alert('Commented')">
+                                    <i class="fa-solid fa-comment"></i>
+                                </span>
                 `;
                 if (response['is_superadmin'] || results[idx]['username'] === response['username']) {
                     // Adalah superadmin atau image ini milik user tsb
@@ -395,20 +403,61 @@ function file_upload_image_namer() {
     };
 }
 function toggleLike(id) {
-    const heartLike = $('#heart-icon-modals-fullscreen-'+id);
+    event.stopPropagation();
+    const heartLike = $('#heart-icon-modals-fullscreen-' + id);
     heartLike.empty();
-    heartLike.append(`<i class="fa-solid fa-heart has-text-danger"></i>`);
+    heartLike.append(`<i class="fas fa-spinner fa-spin"></i>`);
+    $.ajax({
+        url: "/api/like",
+        type: "POST",
+        data: {
+            "post_id_give": id,
+        },
+        success: function (response) {
+            heartLike.empty();
+            if (response["status"] == "created") {
+                heartLike.append(`<i class="fa-solid fa-heart has-text-danger"></i>`);
+            } else {
+                heartLike.append(`<i class="fa-regular fa-heart"></i>`);
+            }
+        }
+    })
 }
 function toggleBookmark(id) {
-    const bookmarkIcon = $('#bookmark-icon-modals-fullscreen-'+id);
-    // $.ajax({
-    //     url:"/api/bookmark",
-    //     type:"POST",
-    //     data:{
-    //         "post_id_give":id,
-    //         "collection_id_give":id
-    //         }
-    // })
+    event.stopPropagation();
+    const bookmarkIcon = $('#bookmark-icon-modals-fullscreen-' + id);
     bookmarkIcon.empty();
-    bookmarkIcon.append(`<i class="fa-solid fa-bookmark has-text-link"></i>`);
+    bookmarkIcon.append(`<i class="fas fa-spinner fa-spin"></i>`);
+    $.ajax({
+        url: "/api/bookmark",
+        type: "POST",
+        data: {
+            "post_id_give": id,
+            "collection_id_give": "65ffb738b96613c66b748e1b"
+        },
+        success: function (response) {
+            bookmarkIcon.empty();
+            if (response["status"] == "created") {
+                bookmarkIcon.append(`<i class="fa-solid fa-bookmark has-text-link"></i>`);
+            } else {
+                bookmarkIcon.append(`<i class="fa-regular fa-bookmark"></i>`);
+            }
+        }
+    })
+}
+function deleteImage(id) {
+    event.stopPropagation();
+    const deleteIcon = $('#delete-icon-modals-fullscreen-' + id);
+    deleteIcon.empty();
+    deleteIcon.append(`<i class="fas fa-spinner fa-spin"></i>`);
+    $.ajax({
+        url: "/api/images/delete",
+        type: "DELETE",
+        data: {
+            "image_id_give": id,
+        },
+        success: function (response) {
+            window.location.href = '/';
+        }
+    })
 }

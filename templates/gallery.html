@@ -20,14 +20,18 @@
     <!-- Custom js -->
     <script src="../static/myjs.js"></script>
     <!-- Bulma -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css;">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
     <!-- Bulma modal css -->
     <link rel="stylesheet" href="https://unpkg.com/bulma-modal-fx/dist/css/modal-fx.min.css" />
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
         integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <title>Helios | Gallery</title>
+    <!-- JQuery cookie -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"
+        integrity="sha512-3j3VU6WC5rPQB4Ld1jnLV7Kd5xr+cq9avvhwqzbH/taCRNURoeEpoPBK9pDyeukwSxwRPJ8fDgvYXd6SkaZ2TA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <title>Helios | My Gallery</title>
 
     <style>
         .separator {
@@ -61,14 +65,15 @@
 
 <body>
     <!-- Navbar -->
-    <nav class="navbar" role="navigation">
+    <!-- Navbar -->
+    <nav class="navbar has-shadow" role="navigation">
         <div class="navbar-brand">
             <a class="navbar-item" href="/">
                 <h1 class="Logo px-4">
                     HELIOS
                 </h1>
             </a>
-            <a role="button" class="navbar-burger mt-4 mr-3" aria-label="menu" aria-expanded="false"
+            <a role="button" class="navbar-burger mt-2 mr-3" aria-label="menu" aria-expanded="false"
                 data-target="navbar-div-menu">
                 <span aria-hidden="true"></span>
                 <span aria-hidden="true"></span>
@@ -77,39 +82,37 @@
         </div>
         <div class="navbar-menu" id="navbar-div-menu">
             <div class="navbar-start mx-4">
-                <a class="navbar-item" href="/">
+                <a class="navbar-item has-text-weight-bold" href="/">
                     Home
                 </a>
                 <a class="navbar-item" href="/about">
                     About us
                 </a>
-                <a class="navbar-item has-text-weight-bold" href="/blog">
+                <a class="navbar-item" href="/blog">
                     Blog
                 </a>
             </div>
             <div class="navbar-end">
                 <!-- search bar -->
                 <div class="mx-5 my-5">
-                    <form>
-                        <div class="search">
-                            <span class="search-icon material-symbols-outlined">search</span>
-                            <input class="search-input" type="search" placeholder="Search">
-                        </div>
-                    </form>
+                    <div class="search">
+                        <span class="search-icon material-symbols-outlined" onclick="search_images()">search</span>
+                        <input class="search-input" type="search" placeholder="Search" onkeydown="search_images()">
+                    </div>
                 </div>
                 <div class="mx-5 my-5">
-                    <figure class="profile-pic" id="user-profile-picture">
-                        <img onclick="openSidebar()" class="is-rounded" src="../static/defaults/48x48.png">
+                    <figure class="profile-pic sidebar-listener" id="user-profile-picture">
+                        <img class="is-rounded" src="../static/defaults/48x48.png">
                     </figure>
                 </div>
             </div>
         </div>
     </nav>
-    <div class="overlay" onclick="closeSidebar()"></div>
+    <div class="overlay sidebar-listener"></div>
     <div class="sidebar">
         <div class="mx-5 my-4">
             <figure class="profile-pic" id="sidebar-user-profile-picture">
-                <img onclick="closeSidebar()" class="is-rounded" src="../static/defaults/48x48.png">
+                <img class="is-rounded" src="../static/defaults/48x48.png">
             </figure>
             <div class="has-text-white mt-4">
                 <div id="sidebar-username">
@@ -120,8 +123,7 @@
                     <p class="is-size-7 has-text-weight-light">About</p>
                     <div>
                         <p id="sidebar-user-about">...</p>
-                        <img onclick="closeSidebar()" width="17" height="17" src="../static/assets/edit-2.svg"
-                            alt="Edit icon">
+                        <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon">
                     </div>
                 </div>
                 <!-- Max 30 character -->
@@ -129,12 +131,11 @@
                     <p class="is-size-7 has-text-weight-light">Gender</p>
                     <div>
                         <p id="sidebar-user-gender">N/A</p>
-                        <img onclick="closeSidebar()" width="17" height="17" src="../static/assets/edit-2.svg"
-                            alt="Edit icon">
+                        <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon">
                     </div>
                 </div>
                 <hr class="separator">
-                <div class="mt-4">
+                <div class="mt-4" onclick="window.location.href = '/bookmarks';">
                     <span class="icon-text">
                         <span class="icon">
                             <i class="fa-solid fa-bookmark"></i>
@@ -143,14 +144,14 @@
                     </span>
                 </div>
                 <div class="mt-4">
-                    <span class="icon-text">
+                    <span class="icon-text" onclick="window.location.href = '/my-gallery';">
                         <span class="icon">
                             <i class="fa-regular fa-images"></i>
                         </span>
                         <span>My Gallery</span>
                     </span>
                 </div>
-                <div class="bottom-content">
+                <div class="bottom-content" onclick="logout_account()">
                     <span class="icon-text">
                         <span class="icon">
                             <i class="fa-solid fa-right-from-bracket"></i>
@@ -174,59 +175,103 @@
         </div>
     </div>
     <div class="columns mx-6 is-centered is-multiline">
-        <div class="column is-3">
+        {% for data in images %}
+        <div class="column is-3 modal-button" style="overflow: hidden;" data-target="modal-image-{{ data['_id' ]}}">
             <figure class="image is-square">
-                <img class="image" src="../static/defaults/Jungle_Expanse_02_3840x2160.png" alt="gambar Bookmarks">
+                <img style="object-fit: cover;" class="image" src="{{ data['image_thumbnail'] }}"
+                    alt="Photos by {{ data['username'] }}">
             </figure>
         </div>
-        <div class="column is-3">
-            <figure class="image is-square">
-                <img class="image" src="../static/defaults/Jungle_Expanse_02_3840x2160.png" alt="gambar Bookmarks">
-            </figure>
-        </div>
-        <div class="column is-3">
-            <figure class="image is-square">
-                <img class="image" src="../static/defaults/Jungle_Expanse_02_3840x2160.png" alt="gambar Bookmarks">
-            </figure>
-        </div>
-        <div class="column is-3">
-            <figure class="image is-square">
-                <img class="image" src="../static/defaults/Jungle_Expanse_02_3840x2160.png" alt="gambar Bookmarks">
-            </figure>
-        </div>
+        {% endfor %}
     </div>
     <div class="mx-5">
         <!-- next slide button -->
-    <nav class="pagination is-centered" role="navigation" aria-label="pagination">
-        {% if prev_page %}
-        <a href="/blog?page={{ prev_page }}" class="pagination-previous">Previous</a>
-        {% else %}
-        <a class="pagination-previous is-disabled">Previous</a>
-        {% endif %}
-        {% if next_page %}
-        <a href="/blog?page={{ next_page }}" class="pagination-next">Next page</a>
-        {% else %}
-        <a class="pagination-next is-disabled">Next page</a>
-        {% endif %}
-        <ul class="pagination-list">
-          <li><a href="/blog?page=1" class="pagination-link">1</a></li>
-  
-          <li><span class="pagination-ellipsis">&hellip;</span></li>
-  
-          {% if prev_page %}
-          <li><a href="/blog?page={{ prev_page }}" class="pagination-link">{{ prev_page }}</a></li>
-          {% endif %}
-          <li><a class="pagination-link is-current">{{ curr_page }}</a></li>
-          {% if next_page %}
-          <li><a href="/blog?page={{ next_page }}" class="pagination-link">{{ next_page }}</a></li>
-          {% endif %}
-  
-          <li><span class="pagination-ellipsis">&hellip;</span></li>
-          <li><a href="/blog?page={{ end_page }}" class="pagination-link">{{ end_page }}</a></li>
-        </ul>
-      </nav>
-    </div>
+        <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+            {% if prev_page %}
+            <a href="/my-gallery?page={{ prev_page }}" class="pagination-previous">Previous</a>
+            {% else %}
+            <a class="pagination-previous is-disabled">Previous</a>
+            {% endif %}
+            {% if next_page %}
+            <a href="/my-gallery?page={{ next_page }}" class="pagination-next">Next page</a>
+            {% else %}
+            <a class="pagination-next is-disabled">Next page</a>
+            {% endif %}
+            <ul class="pagination-list">
+                <li><a href="/my-gallery?page=1" class="pagination-link">1</a></li>
 
+                <li><span class="pagination-ellipsis">&hellip;</span></li>
+
+                {% if prev_page %}
+                <li><a href="/my-gallery?page={{ prev_page }}" class="pagination-link">{{ prev_page }}</a></li>
+                {% endif %}
+                <li><a class="pagination-link is-current">{{ curr_page }}</a></li>
+                {% if next_page %}
+                <li><a href="/my-gallery?page={{ next_page }}" class="pagination-link">{{ next_page }}</a></li>
+                {% endif %}
+
+                <li><span class="pagination-ellipsis">&hellip;</span></li>
+                <li><a href="/my-gallery?page={{ end_page }}" class="pagination-link">{{ end_page }}</a></li>
+            </ul>
+        </nav>
+    </div>
+    <!-- Image modal-->
+    <div id="modals-image-fullscreen">
+        {% for data in images %}
+        <div id="modal-image-{{ data['_id'] }}" class="modal modal-fx-superScaled">
+            <div class="modal-background">
+                <div class="mx-4 column box bottom-content has-text-centered">
+                    <span class="icon" id="bookmark-icon-modals-fullscreen-{{ data['_id'] }}"
+                        onclick="toggleBookmark('{{ data['_id'] }}')">
+                        {% if data['bookmark_by_me'] %}
+                        <i class="fa-solid fa-bookmark has-text-link"></i>
+                        {% else %}
+                        <i class="fa-regular fa-bookmark"></i>
+                        {% endif %}
+                    </span>
+                    <span class="icon ml-4" id="heart-icon-modals-fullscreen-{{ data['_id'] }}"
+                        onclick="toggleLike('{{ data['_id'] }}')">
+                        {% if data['like_by_me'] %}
+                        <i class="fa-solid fa-heart has-text-danger"></i>
+                        {% else %}
+                        <i class="fa-regular fa-heart"></i>
+                        {% endif %}
+                    </span>
+                    <span class="icon ml-4" onclick="alert('Commented')">
+                        <i class="fa-solid fa-comment"></i>
+                    </span>
+                    {% if is_superadmin or data['username'] == current_username %}
+                    <span class="icon ml-4" id="delete-icon-modals-fullscreen-{{ data['_id'] }}"
+                        onclick="deleteImage('{{ data['_id'] }}')">
+                        <i class="fa-solid fa-trash"></i>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="modal-content is-image">
+                <!-- src="{{ data['image_thumbnail'] }}" -->
+                <img loading="lazy" class="lazy-load" src="{{ data['image'] }}" alt="Photos by {{ data['username'] }}">
+            </div>
+            <button class="modal-close is-large" aria-label="close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    <!-- Bulma modal js -->
+    <script src="../static/modal-fx.min.js"></script>
+    <script>
+        burger_function();
+        $(document).ready(function () {
+            const sidebar = $('#sidebar');
+            const sidebarToggle = $('#sidebarToggle');
+
+            sidebarToggle.click(function () {
+                sidebar.toggleClass('is-active');
+            });
+            render_users_infos();
+            sidebar_listener();
+            file_upload_image_namer();
+        });
+    </script>
 </body>
 
 </html>
