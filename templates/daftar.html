@@ -41,18 +41,38 @@
         <div class="hero-body is-justify-content-center is-align-items-center">
             <div class="columns is-flex is-flex-direction-column box">
                 <h3 class="has-text-weight-bold has-text-link">REGISTER</h3>
+                <!-- USERNAME -->
                 <div class="column">
-                    <label for="email">User Name</label>
-                    <input id="username" class="input is-info" type="text" placeholder="Email address">
+                    <label for="username">User Name</label>
+                    <div class="field is-grouped">
+                        <div class="control is-expanded">
+                            <input id="username" class="input is-info" type="text" placeholder="Username"
+                                style="margin-right: 0;">
+                        </div>
+                        <div class="control" style="margin-right: 0;">
+                            <button id="check-id" class="button is-fox">Check your
+                                id</button>
+                        </div>
+                    </div>
+                    <p id="help-text" class="help-text">Accepted id are, 2-10 English characters, numbers, or
+                        special
+                        characters(._-)</p>
                 </div>
+
+                <!-- PASSWORD -->
                 <div class="column">
                     <label for="Name">Password</label>
-                    <input id=""password class="input is-info" type="password" placeholder="Password">
+                    <input id="password" password class="input is-info" type="password" placeholder="Password">
+                    <p class=".help-text">Accepted password are, 8-20 English characters, numbers, or special
+                        characters(!@#$%^&*)</p>
                 </div>
+
+                <!-- VERIFY PASSWORD -->
                 <div class="column">
                     <label for="Name">Input Password Again</label>
-                    <input id="password" class="input is-info" type="password" placeholder="Password">
+                    <input id="verify_password" class="input is-info" type="password" placeholder="Password">
                 </div>
+                <!-- CONTINUE BUTTON -->
                 <div class="column">
                     <button id="continueBtn" class="button is-link is-light is-fullwidth">Continue</button>
                 </div>
@@ -63,15 +83,87 @@
 
     <script>
         $(document).ready(function () {
-            $("#continueBtn").click(function (event) {
-                // Menghentikan form dari submit biasa
+
+            var isUsernameChecked = false; // Flag to check if username is checked
+
+            $("#check-id").click(function (event) {
                 event.preventDefault();
 
-                // Mengambil nilai dari input
-                var username_give = $("#username").val();  // Menyesuaikan nama variabel
-                var password_give = $("#password").val();  // Menyesuaikan nama variabel
+                var username_give = $("#username").val();
 
-                // Melakukan permintaan AJAX ke endpoint login
+                $.ajax({
+                    url: '/api/check_username',
+                    method: 'POST',
+                    data: {
+                        "username_give": username_give
+                    },
+                    success: function (response) {
+                        if (!response.available) {
+                            alert("Username telah dipakai");
+                        } else {
+                            alert("Username tersedia");
+                            isUsernameChecked = true; // Set flag to true after successful check
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        var errorMessage = xhr.responseJSON.msg;
+                        $("#error-message").text(errorMessage);
+                    }
+                });
+            });
+
+            $("#continueBtn").click(function (event) {
+                event.preventDefault();
+
+                var username_give = $("#username").val();
+                var password_give = $("#password").val();
+                var verify_password = $("#verify_password").val();
+
+                // Check if username is checked
+                if (!isUsernameChecked) {
+                    alert("Check ID anda terlebih dahulu");
+                    return;
+                }
+
+                // Check if username, password, or verify password fields are empty
+                if (username_give === "" || password_give === "" || verify_password === "") {
+                    alert("Isi username, password, dan verify password anda");
+                    return;
+                }
+
+                if (username_give.length < 2) {
+                    alert("Username terlalu pendek");
+                    return;
+                }
+                else if (password_give.length > 10) {
+                    alert("Username terlalu panjang");
+                    return;
+                }
+
+                // Password length check
+                if (password_give.length < 8) {
+                    alert("Password terlalu pendek");
+                    return;
+                }
+
+                else if (password_give.length > 20) {
+                    alert("Password terlalu panjang");
+                    return;
+                }
+
+                // Special character constraint
+                var specialChars = /^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]*$/;
+                if (!specialChars.test(password_give)) {
+                    alert("Password mengandung karakter yang tidak diizinkan");
+                    return;
+                }
+
+                // Verify password
+                if (password_give !== verify_password) {
+                    alert("Password dan verify password tidak sesuai");
+                    return;
+                }
+
                 $.ajax({
                     url: '/api/sign_up',
                     method: 'POST',
@@ -80,17 +172,15 @@
                         "password_give": password_give
                     },
                     success: function (response) {
-                        // Jika login berhasil, redirect atau lakukan tindakan lainnya
+                        // If sign-up is successful, redirect to login page or do other actions
                         window.location.href = '/login';
                     },
                     error: function (xhr, status, error) {
-                        // Jika login gagal, tampilkan pesan error
                         var errorMessage = xhr.responseJSON.msg;
                         $("#error-message").text(errorMessage);
                     }
                 });
             });
-            
         });
     </script>
 </body>

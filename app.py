@@ -567,6 +567,17 @@ def sign_in():
     token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
     return jsonify({"result": "success","token": token})
 
+@app.post('/api/check_username')
+def check_username():
+    username_receive = request.form.get('username_give')
+    
+    # Check if username is already taken
+    user_from_db = table_users.find_one({"username": username_receive})
+    if user_from_db:
+        return jsonify({'available': False}), 200  # Username is not available
+    
+    return jsonify({'available': True}), 200  # Username is available
+
 if __name__ == "__main__":
     check_superadmin()
     # Cek apakah folder tersedia
