@@ -2,45 +2,51 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helios | About us</title>
+    <!-- Custom css -->
+    <link rel="stylesheet" href="../static/mycss.css">
+    <!-- Bulma -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+    <!-- Bulma modal css -->
+    <link rel="stylesheet" href="https://unpkg.com/bulma-modal-fx/dist/css/modal-fx.min.css" />
+    <!-- Custom js -->
+    <script src="../static/myjs.js"></script>
     <!-- Google fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
         href="https://fonts.googleapis.com/css2?family=Gemunu+Libre:wght@700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
         rel="stylesheet" />
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <!-- Custom css -->
     <link rel="stylesheet" href="../static/about-us.css" />
-    <link rel="stylesheet" href="../static/mycss.css">
     <!-- Jquery -->
     <script src="https://code.jquery.com/jquery-3.7.1.js"
         integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
-    <!-- Custom js -->
-    <script src="../static/myjs.js"></script>
-    <!-- Bulma -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
-    <!-- Bulma modal css -->
-    <link rel="stylesheet" href="https://unpkg.com/bulma-modal-fx/dist/css/modal-fx.min.css" />
+    <!-- JQuery cookie -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"
+        integrity="sha512-3j3VU6WC5rPQB4Ld1jnLV7Kd5xr+cq9avvhwqzbH/taCRNURoeEpoPBK9pDyeukwSxwRPJ8fDgvYXd6SkaZ2TA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
         integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <title>Helios | Abous</title>
+    <!-- Icon search -->
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 </head>
 
 <body>
     <!-- Navbar -->
-    <nav class="navbar is-white has-shadow" role="navigation">
+    <nav class="navbar has-shadow" role="navigation">
         <div class="navbar-brand">
             <a class="navbar-item" href="/">
                 <h1 class="Logo px-4">
                     HELIOS
                 </h1>
             </a>
-            <a role="button" class="navbar-burger mt-4 mr-3" aria-label="menu" aria-expanded="false"
+            <a role="button" class="navbar-burger mt-2 mr-3" aria-label="menu" aria-expanded="false"
                 data-target="navbar-div-menu">
                 <span aria-hidden="true"></span>
                 <span aria-hidden="true"></span>
@@ -62,12 +68,10 @@
             <div class="navbar-end">
                 <!-- search bar -->
                 <div class="mx-5 my-5">
-                    <form>
-                        <div class="search">
-                            <span class="search-icon material-symbols-outlined">search</span>
-                            <input class="search-input" type="search" placeholder="Search">
-                        </div>
-                    </form>
+                    <div class="search">
+                        <span class="search-icon material-symbols-outlined" onclick="search_images_redirect()">search</span>
+                        <input class="search-input" type="search" placeholder="Search" onkeydown="search_images_redirect()">
+                    </div>
                 </div>
                 <div class="mx-5 my-5">
                     <figure class="profile-pic sidebar-listener" id="user-profile-picture">
@@ -92,8 +96,7 @@
                     <p class="is-size-7 has-text-weight-light">About</p>
                     <div>
                         <p id="sidebar-user-about">...</p>
-                        <img width="17" height="17" src="../static/assets/edit-2.svg"
-                            alt="Edit icon">
+                        <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon">
                     </div>
                 </div>
                 <!-- Max 30 character -->
@@ -101,12 +104,11 @@
                     <p class="is-size-7 has-text-weight-light">Gender</p>
                     <div>
                         <p id="sidebar-user-gender">N/A</p>
-                        <img width="17" height="17" src="../static/assets/edit-2.svg"
-                            alt="Edit icon">
+                        <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon">
                     </div>
                 </div>
                 <hr class="separator">
-                <div class="mt-4">
+                <div class="mt-4" onclick="window.location.href = '/bookmarks';">
                     <span class="icon-text">
                         <span class="icon">
                             <i class="fa-solid fa-bookmark"></i>
@@ -115,14 +117,14 @@
                     </span>
                 </div>
                 <div class="mt-4">
-                    <span class="icon-text">
+                    <span class="icon-text" onclick="window.location.href = '/my-gallery';">
                         <span class="icon">
                             <i class="fa-regular fa-images"></i>
                         </span>
                         <span>My Gallery</span>
                     </span>
                 </div>
-                <div class="bottom-content">
+                <div class="bottom-content" onclick="logout_account()">
                     <span class="icon-text">
                         <span class="icon">
                             <i class="fa-solid fa-right-from-bracket"></i>
@@ -135,10 +137,10 @@
     </div>
     <!-- abous -->
 
-    <div class="about-us mx-3">
-
-        <figure image is-4by3>
-            <img src="../static/defaults/ourPhoto.png">
+    <div class="about-us mx-5 my-5">
+        <h1 class="has-text-bold">Since 2024</h1>
+        <figure>
+            <img class="img-shadow" src="../static/defaults/ourPhoto.png">
         </figure>
         <span class="abous mx-3">
 
@@ -148,13 +150,7 @@
 
         </span>
     </div>
-
-
-
-    <!-- Bulma modal js -->
-    <script src="https://unpkg.com/bulma-modal-fx/dist/js/modal-fx.min.js"></script>
     <script>
-        // upload_listener();
         burger_function();
         $(document).ready(function () {
             const sidebar = $('#sidebar');

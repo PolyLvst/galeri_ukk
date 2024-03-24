@@ -262,11 +262,13 @@
                             <i class="fa-regular fa-heart"></i>
                             {% endif %}
                         </span>
-                        <span class="icon ml-4" onclick="alert('Commented')">
+                        <span class="icon ml-4"
+                            onclick="event.stopPropagation();window.location.href = '/detail/{{ data['_id'] }}'">
                             <i class="fa-solid fa-comment"></i>
                         </span>
                         {% if is_superadmin or data['username'] == current_username %}
-                        <span class="icon ml-4" id="delete-icon-modals-fullscreen-{{ data['_id'] }}" onclick="deleteImage('{{ data['_id'] }}')">
+                        <span class="icon ml-4" id="delete-icon-modals-fullscreen-{{ data['_id'] }}"
+                            onclick="deleteImage('{{ data['_id'] }}')">
                             <i class="fa-solid fa-trash"></i>
                         </span>
                         {% endif %}
@@ -286,30 +288,36 @@
         <!-- next slide button -->
         <nav class="pagination is-centered" role="navigation" aria-label="pagination" id="pagination-parent-nav">
             {% if prev_page %}
-            <a href="/?query={{ query }}&page={{ prev_page }}" class="pagination-previous">Previous</a>
+            <a href="/?query={{ query }}&page={{ prev_page }}&collection={{ collection_id }}"
+                class="pagination-previous">Previous</a>
             {% else %}
             <a class="pagination-previous is-disabled">Previous</a>
             {% endif %}
             {% if next_page %}
-            <a href="/?query={{ query }}&page={{ next_page }}" class="pagination-next">Next page</a>
+            <a href="/?query={{ query }}&page={{ next_page }}&collection={{ collection_id }}"
+                class="pagination-next">Next page</a>
             {% else %}
             <a class="pagination-next is-disabled">Next page</a>
             {% endif %}
             <ul class="pagination-list">
-                <li><a href="/?query={{ query }}&page=1" class="pagination-link">1</a></li>
+                <li><a href="/?query={{ query }}&page=1&collection={{ collection_id }}" class="pagination-link">1</a>
+                </li>
 
                 <li><span class="pagination-ellipsis">&hellip;</span></li>
 
                 {% if prev_page %}
-                <li><a href="/?query={{ query }}&page={{ prev_page }}" class="pagination-link">{{ prev_page }}</a></li>
+                <li><a href="/?query={{ query }}&page={{ prev_page }}&collection={{ collection_id }}"
+                        class="pagination-link">{{ prev_page }}</a></li>
                 {% endif %}
                 <li><a class="pagination-link is-current">{{ curr_page }}</a></li>
                 {% if next_page %}
-                <li><a href="/?query={{ query }}&page={{ next_page }}" class="pagination-link">{{ next_page }}</a></li>
+                <li><a href="/?query={{ query }}&page={{ next_page }}&collection={{ collection_id }}"
+                        class="pagination-link">{{ next_page }}</a></li>
                 {% endif %}
 
                 <li><span class="pagination-ellipsis">&hellip;</span></li>
-                <li><a href="/?query={{ query }}&page={{ end_page }}" class="pagination-link">{{ end_page }}</a></li>
+                <li><a href="/?query={{ query }}&page={{ end_page }}&collection={{ collection_id }}"
+                        class="pagination-link">{{ end_page }}</a></li>
             </ul>
         </nav>
     </div>

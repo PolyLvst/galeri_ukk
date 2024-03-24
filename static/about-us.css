@@ -20,10 +20,9 @@
     line-height: normal;
     letter-spacing: normal;
     text-align: center;
-    color: #000;
 }
 
-.img{
+.img-shadow{
     flex-grow: 0;
     object-fit: contain;
     box-shadow: 0 4px 57.9px 0 rgba(200, 0, 0, 0.2);

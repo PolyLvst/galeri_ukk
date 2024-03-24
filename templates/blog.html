@@ -258,7 +258,7 @@
 
     </div>
     <!-- next slide button -->
-    <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+    <nav class="pagination is-centered my-4" role="navigation" aria-label="pagination">
       {% if prev_page %}
       <a href="/blog?page={{ prev_page }}" class="pagination-previous">Previous</a>
       {% else %}
@@ -293,19 +293,28 @@
     <div id="modal-image-{{ data['_id'] }}" class="modal modal-fx-superScaled">
       <div class="modal-background">
         <div class="mx-4 column box bottom-content has-text-centered">
-          <span class="icon" onclick="alert('Bookmarked')">
-            <i class="fa-regular fa-bookmark"></i>
+          <span class="icon" id="bookmark-icon-modals-fullscreen-{{ data['_id'] }}"
+            onclick="toggleBookmark('{{ data['_id'] }}')">
+            {% if data['bookmark_by_me'] %}
             <i class="fa-solid fa-bookmark has-text-link"></i>
+            {% else %}
+            <i class="fa-regular fa-bookmark"></i>
+            {% endif %}
           </span>
-          <span class="icon ml-4" onclick="alert('Liked')">
-            <i class="fa-regular fa-heart"></i>
+          <span class="icon ml-4" id="heart-icon-modals-fullscreen-{{ data['_id'] }}"
+            onclick="toggleLike('{{ data['_id'] }}')">
+            {% if data['like_by_me'] %}
             <i class="fa-solid fa-heart has-text-danger"></i>
+            {% else %}
+            <i class="fa-regular fa-heart"></i>
+            {% endif %}
           </span>
-          <span class="icon ml-4" onclick="alert('Commented')">
+          <span class="icon ml-4" onclick="event.stopPropagation();window.location.href = '/detail/{{ data['_id'] }}'">
             <i class="fa-solid fa-comment"></i>
           </span>
           {% if is_superadmin or data['username'] == current_username %}
-          <span class="icon ml-4" onclick="alert('Deleted')">
+          <span class="icon ml-4" id="delete-icon-modals-fullscreen-{{ data['_id'] }}"
+            onclick="deleteImage('{{ data['_id'] }}')">
             <i class="fa-solid fa-trash"></i>
           </span>
           {% endif %}
