@@ -17,6 +17,8 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+    <!-- Our custom JavaScript -->
+    <script src="../static/myjs.js"></script>
 
     <style>
         h3 {
@@ -41,18 +43,36 @@
         <div class="hero-body is-justify-content-center is-align-items-center">
             <div class="columns is-flex is-flex-direction-column box">
                 <h3 class="has-text-weight-bold has-text-link">REGISTER</h3>
+                <!-- USERNAME -->
                 <div class="column">
-                    <label for="email">User Name</label>
-                    <input id="username" class="input is-info" type="text" placeholder="Email address">
+                    <label for="username">User Name</label>
+                    <div class="field is-grouped">
+                        <div class="control is-expanded">
+                            <input id="username" class="input is-info" type="text" placeholder="Username"
+                                style="margin-right: 0;">
+                        </div>
+                        <div class="control" style="margin-right: 0;">
+                            <button id="check-id" class="button is-fox">Check your
+                                id</button>
+                        </div>
+                    </div>
+                    <p id="id-taken" class="has-text-danger"></p>
                 </div>
+
+                <!-- PASSWORD -->
                 <div class="column">
                     <label for="Name">Password</label>
-                    <input id=""password class="input is-info" type="password" placeholder="Password">
+                    <input id="password" password class="input is-info" type="password" placeholder="Password">
+                    <p id="password-checker" class="has-text-danger"></p>
                 </div>
+
+                <!-- VERIFY PASSWORD -->
                 <div class="column">
                     <label for="Name">Input Password Again</label>
-                    <input id="password" class="input is-info" type="password" placeholder="Password">
+                    <input id="verify_password" class="input is-info" type="password" placeholder="Password">
+                    <p id="password-same" class="has-text-danger"></p>
                 </div>
+                <!-- CONTINUE BUTTON -->
                 <div class="column">
                     <button id="continueBtn" class="button is-link is-light is-fullwidth">Continue</button>
                 </div>
@@ -63,35 +83,13 @@
 
     <script>
         $(document).ready(function () {
-            $("#continueBtn").click(function (event) {
-                // Menghentikan form dari submit biasa
-                event.preventDefault();
-
-                // Mengambil nilai dari input
-                var username_give = $("#username").val();  // Menyesuaikan nama variabel
-                var password_give = $("#password").val();  // Menyesuaikan nama variabel
-
-                // Melakukan permintaan AJAX ke endpoint login
-                $.ajax({
-                    url: '/api/sign_up',
-                    method: 'POST',
-                    data: {
-                        "username_give": username_give,
-                        "password_give": password_give
-                    },
-                    success: function (response) {
-                        // Jika login berhasil, redirect atau lakukan tindakan lainnya
-                        window.location.href = '/login';
-                    },
-                    error: function (xhr, status, error) {
-                        // Jika login gagal, tampilkan pesan error
-                        var errorMessage = xhr.responseJSON.msg;
-                        $("#error-message").text(errorMessage);
-                    }
-                });
-            });
-            
-        });
+            // memanggil function checkid_listener()
+            checkid_listener()
+            // memanggil function continue_button_listener()
+            continue_button_listener()
+            // memanggil function check_id()
+            check_id()
+        })
     </script>
 </body>
 
