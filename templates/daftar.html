@@ -17,6 +17,8 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+    <!-- Our custom JavaScript -->
+    <script src="../static/myjs.js"></script>
 
     <style>
         h3 {
@@ -54,23 +56,21 @@
                                 id</button>
                         </div>
                     </div>
-                    <p id="help-text" class="help-text">Accepted id are, 2-10 English characters, numbers, or
-                        special
-                        characters(._-)</p>
+                    <p id="id-taken" class="has-text-danger"></p>
                 </div>
 
                 <!-- PASSWORD -->
                 <div class="column">
                     <label for="Name">Password</label>
                     <input id="password" password class="input is-info" type="password" placeholder="Password">
-                    <p class=".help-text">Accepted password are, 8-20 English characters, numbers, or special
-                        characters(!@#$%^&*)</p>
+                    <p id="password-checker" class="has-text-danger"></p>
                 </div>
 
                 <!-- VERIFY PASSWORD -->
                 <div class="column">
                     <label for="Name">Input Password Again</label>
                     <input id="verify_password" class="input is-info" type="password" placeholder="Password">
+                    <p id="password-same" class="has-text-danger"></p>
                 </div>
                 <!-- CONTINUE BUTTON -->
                 <div class="column">
@@ -83,105 +83,13 @@
 
     <script>
         $(document).ready(function () {
-
-            var isUsernameChecked = false; // Flag to check if username is checked
-
-            $("#check-id").click(function (event) {
-                event.preventDefault();
-
-                var username_give = $("#username").val();
-
-                $.ajax({
-                    url: '/api/check_username',
-                    method: 'POST',
-                    data: {
-                        "username_give": username_give
-                    },
-                    success: function (response) {
-                        if (!response.available) {
-                            alert("Username telah dipakai");
-                        } else {
-                            alert("Username tersedia");
-                            isUsernameChecked = true; // Set flag to true after successful check
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        var errorMessage = xhr.responseJSON.msg;
-                        $("#error-message").text(errorMessage);
-                    }
-                });
-            });
-
-            $("#continueBtn").click(function (event) {
-                event.preventDefault();
-
-                var username_give = $("#username").val();
-                var password_give = $("#password").val();
-                var verify_password = $("#verify_password").val();
-
-                // Check if username is checked
-                if (!isUsernameChecked) {
-                    alert("Check ID anda terlebih dahulu");
-                    return;
-                }
-
-                // Check if username, password, or verify password fields are empty
-                if (username_give === "" || password_give === "" || verify_password === "") {
-                    alert("Isi username, password, dan verify password anda");
-                    return;
-                }
-
-                if (username_give.length < 2) {
-                    alert("Username terlalu pendek");
-                    return;
-                }
-                else if (password_give.length > 10) {
-                    alert("Username terlalu panjang");
-                    return;
-                }
-
-                // Password length check
-                if (password_give.length < 8) {
-                    alert("Password terlalu pendek");
-                    return;
-                }
-
-                else if (password_give.length > 20) {
-                    alert("Password terlalu panjang");
-                    return;
-                }
-
-                // Special character constraint
-                var specialChars = /^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]*$/;
-                if (!specialChars.test(password_give)) {
-                    alert("Password mengandung karakter yang tidak diizinkan");
-                    return;
-                }
-
-                // Verify password
-                if (password_give !== verify_password) {
-                    alert("Password dan verify password tidak sesuai");
-                    return;
-                }
-
-                $.ajax({
-                    url: '/api/sign_up',
-                    method: 'POST',
-                    data: {
-                        "username_give": username_give,
-                        "password_give": password_give
-                    },
-                    success: function (response) {
-                        // If sign-up is successful, redirect to login page or do other actions
-                        window.location.href = '/login';
-                    },
-                    error: function (xhr, status, error) {
-                        var errorMessage = xhr.responseJSON.msg;
-                        $("#error-message").text(errorMessage);
-                    }
-                });
-            });
-        });
+            // memanggil function checkid_listener()
+            checkid_listener()
+            // memanggil function continue_button_listener()
+            continue_button_listener()
+            // memanggil function check_id()
+            check_id()
+        })
     </script>
 </body>
 
