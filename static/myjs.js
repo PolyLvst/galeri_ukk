@@ -211,7 +211,7 @@ function check_id() {
             $("#error-message").text(errorMessage);
         }
     });
-=======
+};
 function search_images() {
     if (event.key === 'Enter') {
     } else {
