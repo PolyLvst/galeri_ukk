@@ -251,6 +251,7 @@ def home():
         limit = skip + per_page
         photos = results[skip:limit]
     elif collection != '':
+        print(collection)
         bookmarks_list = list(table_bookmarks.find({"collection_id":collection}).sort("_id",-1))
         total_items = len(bookmarks_list)
         skip,prev_page,next_page,end_page = get_pagination_count(items_per_page=per_page,page=page,total_items=total_items)
@@ -258,8 +259,11 @@ def home():
         skip = (page - 1) * per_page
         limit = skip + per_page
         bookmarks_list = bookmarks_list[skip:limit]
+        print(bookmarks_list)
         post_ids = [ObjectId(bookmark['post_id']) for bookmark in bookmarks_list]
+        print(post_ids)
         photos = list(table_photos.find({"_id": {"$in": post_ids}}).sort("_id",-1))
+        print(photos)
     else:
         total_items = table_photos.count_documents({})
         skip,prev_page,next_page,end_page = get_pagination_count(items_per_page=per_page,page=page,total_items=total_items)
@@ -438,7 +442,7 @@ def update_bookmark():
     collection_id = table_saved_collection.find_one({"username":username,"collection_name":user.get("choose_collection")})
 
     bookmark = table_bookmarks.find_one_and_delete({"username":username,"post_id":post_id})
-    collection = table_saved_collection.find_one({"_id":ObjectId(collection_id)})
+    collection = table_saved_collection.find_one({"_id":ObjectId(collection_id.get("_id"))})
     image = table_photos.find_one({"_id":ObjectId(post_id)})
     if bookmark:
         return jsonify({"msg":"Bookmark deleted","status":"deleted"})
@@ -451,7 +455,7 @@ def update_bookmark():
         "image_thumbnail":image.get('image_thumbnail'),
         "post_id":post_id,
         "username":username,
-        "collection_id":collection_id,
+        "collection_id":str(collection_id.get("_id")),
         "date":datetime.now().strftime("%d-%m-%y %H:%M:%S")
     }
     table_bookmarks.insert_one(doc)
@@ -520,7 +524,10 @@ def bookmarks_page():
     # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
     collection_saved = list(table_saved_collection.find({"username":username}).sort("_id",-1).skip(skip).limit(limit=per_page))
     for collection in collection_saved:
+        print(collection)
+        print({"collection_id":collection['_id'],"username":username})
         bookmarks_list = list(table_bookmarks.find({"collection_id":str(collection['_id']),"username":username}).sort("_id",-1).limit(limit=bookmarks_preview_amount))
+        print(bookmarks_list)
         if not bookmarks_list:
             print(collection['collection_name']," # --- Not found")
             # Maka koleksi masih baru atau kosong
