@@ -123,60 +123,111 @@ function checkid_listener() {
 
 }
 
+
 // function untuk continue serta melihat apakah ada field yang kosong, juga mengecek jika password verify tidak sama 
+function listen_continue() {
+    event.preventDefault();
 
-function continue_button_listener() {
-    $("#continueBtn").click(function (event) {
-        event.preventDefault();
+    var username_give = $("#username").val();
+    var password_give = $("#password").val();
+    var verify_password = $("#verify_password").val();
 
-        var username_give = $("#username").val();
-        var password_give = $("#password").val();
-        var verify_password = $("#verify_password").val();
-
-        // Check if username is checked
+    // Check if username is checked
+    if (!isUsernameChecked) {
+        check_id();
         if (!isUsernameChecked) {
-            check_id();
-            if (!isUsernameChecked) {
-                return;
-            }
-        }
-
-        // Check if username, password, or verify password fields are empty
-        $("#id-taken").empty()
-        if (password_give === "") {
-            $("#password-checker").text('Please fill the password field');
             return;
         }
+    }
 
-        if (verify_password === "") {
-            $("#password-same").text('Please verify your password');
-            return;
+    // Check if username, password, or verify password fields are empty
+    $("#id-taken").empty()
+    if (password_give === "") {
+        $("#password-checker").text('Please fill the password field');
+        return;
+    }
+
+    if (verify_password === "") {
+        $("#password-same").text('Please verify your password');
+        return;
+    }
+
+    // Verify password
+    if (password_give !== verify_password) {
+        $("#password-same").text('Password not the same');
+        return;
+    }
+
+    $.ajax({
+        url: '/api/sign_up',
+        method: 'POST',
+        data: {
+            "username_give": username_give,
+            "password_give": password_give
+        },
+        success: function (response) {
+            // If sign-up is successful, redirect to login page or do other actions
+            window.location.href = '/login';
+        },
+        error: function (xhr, status, error) {
+            var errorMessage = xhr.responseJSON.msg;
+            $("#error-message").text(errorMessage);
         }
-
-        // Verify password
-        if (password_give !== verify_password) {
-            $("#password-same").text('Password not the same');
-            return;
-        }
-
-        $.ajax({
-            url: '/api/sign_up',
-            method: 'POST',
-            data: {
-                "username_give": username_give,
-                "password_give": password_give
-            },
-            success: function (response) {
-                // If sign-up is successful, redirect to login page or do other actions
-                window.location.href = '/login';
-            },
-            error: function (xhr, status, error) {
-                var errorMessage = xhr.responseJSON.msg;
-                $("#error-message").text(errorMessage);
-            }
-        });
     });
 
+}
+function listen_login_continue() {
+    // Menghentikan form dari submit biasa
+    event.preventDefault();
+
+    // Mengambil nilai dari input
+    var username_give = $("#username").val();  // Menyesuaikan nama variabel
+    var password_give = $("#password").val();  // Menyesuaikan nama variabel
+
+    // Melakukan permintaan AJAX ke endpoint login
+    $.ajax({
+        url: '/api/sign_in',
+        method: 'POST',
+        data: {
+            "username_give": username_give,
+            "password_give": password_give
+        },
+        success: function (response) {
+            // Mengatur cookie dengan nama 'nama_cookie' dan nilai 'nilai_cookie' dengan masa kedaluwarsa 1 hari
+            $.cookie('token', response["token"], { expires: 1 });
+
+            // Jika login berhasil, redirect atau lakukan tindakan lainnya
+            window.location.href = '/';
+        },
+        error: function (xhr, status, error) {
+            // Jika login gagal, tampilkan pesan error
+            alert(status, error);
+        }
+    });
+}
+function continue_button_listener() {
+    $("#continueBtn").click(function (event) {
+        listen_continue()
+    });
+}
+function enter_listener() {
+    if (event.key === 'Enter') {
+        listen_continue()
+    } else {
+        return;
+    }
+}
+function login_button_listener() {
+    $("#loginBtn").click(function (event) {
+        listen_login_continue()
+    });
+}
+function enter_listener_login() {
+    if (event.key === 'Enter') {
+        listen_login_continue()
+    } else {
+        return;
+    }
 }
 
 // Function untuk mengecek apakah username available
