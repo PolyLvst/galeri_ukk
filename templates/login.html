@@ -15,7 +15,8 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
-
+    <!-- Our custom JavaScript -->
+    <script src="../static/myjs.js"></script>
 
     <style>
         h3 {
@@ -46,11 +47,11 @@
                 <h3 class="has-text-weight-bold has-text-link">LOGIN</h3>
                 <div class="column">
                     <label for="email">User Name </label>
-                    <input class="input" type="text" placeholder="Username" id="username">
+                    <input class="input" type="text" placeholder="Username" id="username" onkeydown="enter_listener_login()">
                 </div>
                 <div class="column">
                     <label for="Name">Password</label>
-                    <input class="input" type="password" placeholder="Password" id="password">
+                    <input class="input" type="password" placeholder="Password" id="password" onkeydown="enter_listener_login()">
                 </div>
                 <div class="column">
                     <button id="loginBtn" class="button is-link is-light is-fullwidth" type="submit"
@@ -67,35 +68,9 @@
     </div>
     <script>
         $(document).ready(function () {
-            $("#loginBtn").click(function (event) {
-                // Menghentikan form dari submit biasa
-                event.preventDefault();
-
-                // Mengambil nilai dari input
-                var username_give = $("#username").val();  // Menyesuaikan nama variabel
-                var password_give = $("#password").val();  // Menyesuaikan nama variabel
-
-                // Melakukan permintaan AJAX ke endpoint login
-                $.ajax({
-                    url: '/api/sign_in',
-                    method: 'POST',
-                    data: {
-                        "username_give": username_give,
-                        "password_give": password_give
-                    },
-                    success: function (response) {
-                        // Mengatur cookie dengan nama 'nama_cookie' dan nilai 'nilai_cookie' dengan masa kedaluwarsa 1 hari
-                        $.cookie('token', response["token"], { expires: 1 });
-
-                        // Jika login berhasil, redirect atau lakukan tindakan lainnya
-                        window.location.href = '/';
-                    },
-                    error: function (xhr, status, error) {
-                        // Jika login gagal, tampilkan pesan error
-                        alert(status, error);
-                    }
-                });
-            });
+            enter_listener_login()
+            login_button_listener()
+            // memanggil function enter_listener()
         });
     </script>
 </body>

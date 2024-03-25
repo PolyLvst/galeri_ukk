@@ -51,7 +51,7 @@
                     <div class="field is-grouped">
                         <div class="control is-expanded">
                             <input id="username" class="input" type="text" placeholder="Username"
-                                style="margin-right: 0;">
+                                style="margin-right: 0;" onkeydown="enter_listener()">
                         </div>
                         <div class="control" style="margin-right: 0;">
                             <button id="check-id" class="button is-fox">Check your
@@ -64,14 +64,14 @@
                 <!-- PASSWORD -->
                 <div class="column">
                     <label for="Name">Password</label>
-                    <input id="password" password class="input" type="password" placeholder="Password">
+                    <input id="password" password class="input" type="password" placeholder="Password" onkeydown="enter_listener()">
                     <p id="password-checker" class="has-text-danger"></p>
                 </div>
 
                 <!-- VERIFY PASSWORD -->
                 <div class="column">
                     <label for="Name">Input Password Again</label>
-                    <input id="verify_password" class="input" type="password" placeholder="Password">
+                    <input id="verify_password" class="input" type="password" placeholder="Password" onkeydown="enter_listener()">
                     <p id="password-same" class="has-text-danger"></p>
                 </div>
                 <!-- CONTINUE BUTTON -->
@@ -96,6 +96,8 @@
             continue_button_listener()
             // memanggil function check_id()
             check_id()
+            // memanggil function enter_listener()
+            enter_listener()
         })
     </script>
 </body>
