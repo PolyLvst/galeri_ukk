@@ -4,6 +4,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Icon Tab -->
+  <link rel="icon" type="image/x-icon" href="../static/assets/icon.png">
   <!-- Google fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -234,8 +236,8 @@
           <div class="card-content">
             <div class="media">
               <div class="media-content">
-                <p class="title is-4">{{ data['title'] }}</p>
-                <p class="subtitle is-6">@{{ data['username'] }}</p>
+                <p class="title is-4" onclick="window.location.href = '/detail/{{ data['_id'] }}?from_page=/blog?page={{curr_page}}'">{{ data['title'] }}</p>
+                <p class="subtitle is-6" onclick="window.location.href = '/user/{{ data['username'] }}'">@{{ data['username'] }}</p>
               </div>
             </div>
           </div>
@@ -309,7 +311,7 @@
             <i class="fa-regular fa-heart"></i>
             {% endif %}
           </span>
-          <span class="icon ml-4" onclick="event.stopPropagation();window.location.href = '/detail/{{ data['_id'] }}'">
+          <span class="icon ml-4" onclick="event.stopPropagation();window.location.href = '/detail/{{ data['_id'] }}?from_page=/blog?page={{curr_page}}'">
             <i class="fa-solid fa-comment"></i>
           </span>
           {% if is_superadmin or data['username'] == current_username %}
@@ -342,6 +344,7 @@
       render_users_infos();
       sidebar_listener();
       file_upload_image_namer();
+      from_page_backtrack_listener();
     });
   </script>
 </body>

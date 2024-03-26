@@ -582,3 +582,14 @@ function deleteComment(comment_id) {
         }
     })
 }
+function from_page_backtrack_listener() {
+    var hash = window.location.hash; // Ambil value pagar contoh = localhost:5000/#modal-image-112233
+    if (hash && hash.startsWith('#modal-image')) {
+        var modalId = hash.substr(1); // Remove the "#" from the hash
+        console.log(modalId);
+        var modal = $('#' + modalId);
+        if (modal.length) {
+            modal.addClass('is-active'); // Add a class to show the modal
+        }
+    }
+}

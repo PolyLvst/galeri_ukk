@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Helios | Gallery</title>
+    <!-- Icon Tab -->
+    <link rel="icon" type="image/x-icon" href="../static/assets/icon.png">
     <!-- Custom css -->
     <link rel="stylesheet" href="../static/mycss.css">
     <!-- Bulma -->
@@ -263,7 +265,7 @@
                             {% endif %}
                         </span>
                         <span class="icon ml-4"
-                            onclick="event.stopPropagation();window.location.href = '/detail/{{ data['_id'] }}'">
+                            onclick="event.stopPropagation();window.location.href = '/detail/{{ data['_id'] }}?from_page=/?page={{curr_page}}{{args_nav}}'">
                             <i class="fa-solid fa-comment"></i>
                         </span>
                         {% if is_superadmin or data['username'] == current_username %}
@@ -288,35 +290,35 @@
         <!-- next slide button -->
         <nav class="pagination is-centered" role="navigation" aria-label="pagination" id="pagination-parent-nav">
             {% if prev_page %}
-            <a href="/?query={{ query }}&page={{ prev_page }}&collection={{ collection_id }}"
+            <a href="/?page={{ prev_page }}{{ args_nav }}"
                 class="pagination-previous">Previous</a>
             {% else %}
             <a class="pagination-previous is-disabled">Previous</a>
             {% endif %}
             {% if next_page %}
-            <a href="/?query={{ query }}&page={{ next_page }}&collection={{ collection_id }}"
+            <a href="/?page={{ next_page }}{{ args_nav }}"
                 class="pagination-next">Next page</a>
             {% else %}
             <a class="pagination-next is-disabled">Next page</a>
             {% endif %}
             <ul class="pagination-list">
-                <li><a href="/?query={{ query }}&page=1&collection={{ collection_id }}" class="pagination-link">1</a>
+                <li><a href="/?page=1{{ args_nav }}" class="pagination-link">1</a>
                 </li>
 
                 <li><span class="pagination-ellipsis">&hellip;</span></li>
 
                 {% if prev_page %}
-                <li><a href="/?query={{ query }}&page={{ prev_page }}&collection={{ collection_id }}"
+                <li><a href="/?page={{ prev_page }}{{ args_nav }}"
                         class="pagination-link">{{ prev_page }}</a></li>
                 {% endif %}
                 <li><a class="pagination-link is-current">{{ curr_page }}</a></li>
                 {% if next_page %}
-                <li><a href="/?query={{ query }}&page={{ next_page }}&collection={{ collection_id }}"
+                <li><a href="/?page={{ next_page }}{{ args_nav }}"
                         class="pagination-link">{{ next_page }}</a></li>
                 {% endif %}
 
                 <li><span class="pagination-ellipsis">&hellip;</span></li>
-                <li><a href="/?query={{ query }}&page={{ end_page }}&collection={{ collection_id }}"
+                <li><a href="/?page={{ end_page }}{{ args_nav }}"
                         class="pagination-link">{{ end_page }}</a></li>
             </ul>
         </nav>
@@ -338,6 +340,7 @@
             render_users_infos();
             sidebar_listener();
             file_upload_image_namer();
+            from_page_backtrack_listener();
         });
     </script>
 </body>
