@@ -314,14 +314,14 @@ function search_images() {
                     tempHtmlModals += `<i class="fa-regular fa-heart"></i>`;
                 };
                 tempHtmlModals += `</span>
-                                <span class="icon ml-4" onclick="alert('Commented')">
+                                <span class="icon ml-4" onclick="event.stopPropagation();window.location.href = '/detail/${results[idx]["_id"]}'">
                                     <i class="fa-solid fa-comment"></i>
                                 </span>
                 `;
                 if (response['is_superadmin'] || results[idx]['username'] === response['username']) {
                     // Adalah superadmin atau image ini milik user tsb
                     tempHtmlModals += `
-                    <span class="icon ml-4" onclick="alert('Deleted')">
+                    <span class="icon ml-4" onclick="deleteImage('${results[idx]["_id"]}')">
                     <i class="fa-solid fa-trash"></i>
                     </span>
                     `;
