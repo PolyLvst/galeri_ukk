@@ -552,7 +552,8 @@ def bookmarks_page():
                         curr_page = page,
                         end_page = end_page,
                         prev_page = prev_page,
-                        next_page = next_page)
+                        next_page = next_page,
+                        current_username=username)
 
 @app.get("/api/search")
 def search():
@@ -579,6 +580,9 @@ def search():
 
     page = request.args.get('page', default=1, type=int)
     per_page = request.args.get('per_page', default=items_per_page, type=int) # Number of items per page
+    args_nav = "%26" # &
+    # Untuk tombol navigasi bawah
+    args_nav = f'{args_nav}query={query}'
 
     results = search_images_query(query=query)
     
@@ -602,7 +606,8 @@ def search():
                     "curr_page":page,
                     "prev_page":prev_page,
                     "next_page":next_page,
-                    "end_page":end_page})
+                    "end_page":end_page,
+                    "args_nav":args_nav})
 
 @app.get("/blog")
 def blog():
@@ -758,7 +763,7 @@ def about_page():
         msg = 'Something wrong happens'
         return redirect(url_for('login_fn',msg=msg))
     # Jika payload terverifikasi maka kode dibawah akan di execute
-    return render_template("about.html")
+    return render_template("about.html",current_username=username)
 
 # Get info dari token tentang user
 @app.get("/api/me")
@@ -784,35 +789,6 @@ def get_info_me():
     user = table_users.find_one({"username":username},{"password":False})
     user["_id"] = str(user["_id"])
     return jsonify({"data":user})
-
-# Update user info, bio, gender ...
-@app.put("/api/me")
-def update_info_me():
-    # Ambil cookie
-    token_receive = request.cookies.get(TOKEN)
-    try:
-        # Buka konten cookie
-        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
-        username = payload['username']
-        # Payload terverifikasi
-        pass
-    except jwt.ExpiredSignatureError:
-        # Sesinya sudah lewat dari 24 Jam
-        msg = 'Your session has expired'
-        return redirect(url_for('login_fn',msg=msg))
-    except jwt.exceptions.DecodeError:
-        # Tidak ada token
-        msg = 'Something wrong happens'
-        return redirect(url_for('login_fn',msg=msg))
-    # Jika payload terverifikasi maka kode dibawah akan di execute
-    bio_receive = request.form.get('bio_give')
-    gender_receive = request.form.get('gender_give')
-    new_doc = {
-        "bio": bio_receive,
-        "gender": gender_receive,
-    }
-    table_users.update_one({"username":username},{"$set":new_doc})
-    return jsonify({"msg":"Item updated"})
     
 # Endpoint ambil path images
 @app.get("/api/images") # Optional args skip and limit, contoh : /api/images?skip=0&limit=10
@@ -995,9 +971,9 @@ def delete_images():
     table_comments.delete_many({"post_id":image_id})
     return jsonify({"msg":"Image deleted"})
 
-# Endpoint update foto profil
-@app.put("/api/profile/image")
-def update_profile_image():
+# Endpoint update foto profil, about, bio
+@app.put("/api/me")
+def update_user_me():
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
     try:
@@ -1014,9 +990,14 @@ def update_profile_image():
         msg = 'Something wrong happens'
         return redirect(url_for('login_fn',msg=msg))
     # Jika payload terverifikasi maka kode dibawah akan di execute
+    bio_receive = request.form.get('bio_give','')
+    gender_receive = request.form.get('gender_give','')
+    print(bio_receive,gender_receive)
+    doc = {}
     # Cek jika file telah terupload
     if 'file_give' in request.files:
         file = request.files['file_give']
+        
         # Amankan filename dari karakter spesial
         filename = secure_filename(file.filename)
         extension = os.path.splitext(filename)[-1].replace('.','')
@@ -1046,15 +1027,22 @@ def update_profile_image():
 
         # Delete temp file
         os.remove(file_save_path)
-        doc = {"profile_pic": StorageURL+"static/"+file_path,
-               "profile_pic_repo":file_path}
-        # Masukkan url ke database
-        # $set adalah cara mongodb mengupdate suatu document dalam table
-        table_users.update_one(filter={"username":username},update={"$set":doc})
-        return {"msg":"Photo uploaded"}
-    else:
-        # Foto tidak terupload
-        return {"msg":"No image uploaded"},404 # Not found
+        doc["profile_pic"] = StorageURL+"static/"+file_path
+        doc["profile_pic_repo"] =file_path
+        # Append profile pic ke doc untuk diupdate di database
+        update_comment_pp = {
+            "profile_pic": StorageURL+"static/"+file_path
+        }
+        table_comments.update_many({"username":username},{"$set":update_comment_pp})
+
+    if bio_receive != '':
+        doc["bio"] = bio_receive
+    if gender_receive != '':
+        doc["gender"] = gender_receive
+    # Masukkan url ke database
+    # $set adalah cara mongodb mengupdate suatu document dalam table
+    table_users.update_one(filter={"username":username},update={"$set":doc})
+    return {"msg":"Photo uploaded. Items updated"}
 
 # Login page
 @app.get("/login")
