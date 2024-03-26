@@ -582,3 +582,7 @@ function deleteComment(comment_id) {
         }
     })
 }
+
+function copyComment(copyComment_id){
+    
+}
