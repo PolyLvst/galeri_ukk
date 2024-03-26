@@ -134,3 +134,11 @@
     height: 100%;
 }
 
+.dropdown-menu {
+    display: none; /* Awalnya dropdown tidak ditampilkan */
+  }
+  
+  .dropdown-menu.show {
+    display: block; /* Dropdown akan ditampilkan ketika kelas 'show' ditambahkan */
+  }
+  

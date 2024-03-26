@@ -582,3 +582,8 @@ function deleteComment(comment_id) {
         }
     })
 }
+function toggleDropdown() {
+    var dropdownMenu = document.getElementById('dropdown-menu3');
+    dropdownMenu.classList.toggle('show');
+  }
+  
