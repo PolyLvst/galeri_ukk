@@ -240,8 +240,11 @@ def home():
     per_page = request.args.get('per_page', default=items_per_page_home, type=int) # Number of items per page
     query = request.args.get('query', '')
     collection = request.args.get('collection', '')
+    args_nav = "%26" # &
 
     if query != '':
+        # Untuk tombol navigasi bawah
+        args_nav = f'{args_nav}query={query}'
         results = search_images_query(query=query)
         total_items = len(results)  # Total number of items in the collection
         
@@ -251,7 +254,8 @@ def home():
         limit = skip + per_page
         photos = results[skip:limit]
     elif collection != '':
-        print(collection)
+        # Untuk tombol navigasi bawah
+        args_nav = f'{args_nav}collection={collection}'
         bookmarks_list = list(table_bookmarks.find({"collection_id":collection}).sort("_id",-1))
         total_items = len(bookmarks_list)
         skip,prev_page,next_page,end_page = get_pagination_count(items_per_page=per_page,page=page,total_items=total_items)
@@ -259,17 +263,15 @@ def home():
         skip = (page - 1) * per_page
         limit = skip + per_page
         bookmarks_list = bookmarks_list[skip:limit]
-        print(bookmarks_list)
         post_ids = [ObjectId(bookmark['post_id']) for bookmark in bookmarks_list]
-        print(post_ids)
         photos = list(table_photos.find({"_id": {"$in": post_ids}}).sort("_id",-1))
-        print(photos)
     else:
+        args_nav = ""
         total_items = table_photos.count_documents({})
         skip,prev_page,next_page,end_page = get_pagination_count(items_per_page=per_page,page=page,total_items=total_items)
 
         # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
-        photos = list(table_photos.find({}).sort("_id",-1).skip(skip=skip).limit(limit=per_page))
+        photos = list(table_photos.find({}).sort("_id",-1).skip(skip=skip).limit(limit=per_page))        
     photos = images_social(posts=photos,username=username)
     idx = 0
     for doc in photos:
@@ -283,8 +285,8 @@ def home():
                            prev_page=prev_page,
                            next_page=next_page,
                            end_page=end_page,
-                           query=query,
-                           collection_id=collection)
+                           args_nav=args_nav,
+                           query=query)
 
 @app.get("/detail/<post_id>")
 def get_detail_page(post_id=None):
@@ -306,6 +308,7 @@ def get_detail_page(post_id=None):
         msg = 'Something wrong happens'
         return redirect(url_for('login_fn',msg=msg))
     # Jika payload terverifikasi maka kode dibawah akan di execute
+    from_page = request.args.get("from_page","/")
     if not post_id or len(post_id) < 24:
         return redirect(url_for('home'))
     photo = table_photos.find_one({"_id":ObjectId(post_id)})
@@ -319,7 +322,8 @@ def get_detail_page(post_id=None):
                            poster_user=poster_user,
                            current_username=username,
                            is_superadmin=is_superadmin,
-                           comments=comments)
+                           comments=comments,
+                           from_page=from_page)
 
 @app.post("/api/comment/create")
 def create_comment():
@@ -350,7 +354,7 @@ def create_comment():
         "post_id":post_id_receive,
         "comment":comment_receive,
         "profile_pic":commenter.get("profile_pic"),
-        "date":datetime.now().strftime("%d-%m-%y %H:%M:%S")
+        "date":datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     }
 
     table_comments.insert_one(doc)
@@ -456,7 +460,7 @@ def update_bookmark():
         "post_id":post_id,
         "username":username,
         "collection_id":str(collection_id.get("_id")),
-        "date":datetime.now().strftime("%d-%m-%y %H:%M:%S")
+        "date":datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     }
     table_bookmarks.insert_one(doc)
     return jsonify({"msg":"Bookmarked","status":"created"})
@@ -489,7 +493,7 @@ def update_like():
     doc = {
         "post_id":post_id,
         "username":username,
-        "date":datetime.now().strftime("%d-%m-%y %H:%M:%S")
+        "date":datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     }
     table_liked.insert_one(doc)
     return jsonify({"msg":"Liked","status":"created"})
@@ -548,7 +552,8 @@ def bookmarks_page():
                         curr_page = page,
                         end_page = end_page,
                         prev_page = prev_page,
-                        next_page = next_page)
+                        next_page = next_page,
+                        current_username=username)
 
 @app.get("/api/search")
 def search():
@@ -575,6 +580,9 @@ def search():
 
     page = request.args.get('page', default=1, type=int)
     per_page = request.args.get('per_page', default=items_per_page, type=int) # Number of items per page
+    args_nav = "%26" # &
+    # Untuk tombol navigasi bawah
+    args_nav = f'{args_nav}query={query}'
 
     results = search_images_query(query=query)
     
@@ -598,7 +606,8 @@ def search():
                     "curr_page":page,
                     "prev_page":prev_page,
                     "next_page":next_page,
-                    "end_page":end_page})
+                    "end_page":end_page,
+                    "args_nav":args_nav})
 
 @app.get("/blog")
 def blog():
@@ -638,6 +647,52 @@ def blog():
     return render_template('blog.html',
                            images=photos,
                            current_username=username,
+                           is_superadmin=is_superadmin,
+                           curr_page=page,
+                           prev_page=prev_page,
+                           next_page=next_page,
+                           end_page=end_page)
+
+@app.get("/user/<user_name>")
+def user_gallery(user_name):
+    # Ambil cookie
+    token_receive = request.cookies.get(TOKEN)
+    try:
+        # Buka konten cookie
+        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        username = payload["username"]
+        is_superadmin = payload["is_superadmin"]
+        # Payload terverifikasi
+        pass
+    except jwt.ExpiredSignatureError:
+        # Sesinya sudah lewat dari 24 Jam
+        msg = 'Your session has expired'
+        return redirect(url_for('login_fn',msg=msg))
+    except jwt.exceptions.DecodeError:
+        # Tidak ada token
+        msg = 'Something wrong happens'
+        return redirect(url_for('login_fn',msg=msg))
+    # Jika payload terverifikasi maka kode dibawah akan di execute
+    items_per_page_blog = 12
+
+    page = request.args.get('page', default=1, type=int)
+    per_page = request.args.get('per_page', default=items_per_page_blog, type=int) # Number of items per page
+
+    total_items = table_photos.count_documents({"username":user_name})
+    skip,prev_page,next_page,end_page = get_pagination_count(items_per_page=per_page,page=page,total_items=total_items)
+
+    # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
+    photos = list(table_photos.find({"username":user_name}).sort("_id",-1).skip(skip=skip).limit(limit=per_page))
+    user_name = table_users.find_one({"username":user_name})
+    photos = images_social(posts=photos,username=user_name)
+    idx = 0
+    for doc in photos:
+        photos[idx]["_id"] = str(doc["_id"])
+        idx += 1
+    return render_template('galleryUser.html',
+                           images=photos,
+                           current_username=username,
+                           user_name=user_name,
                            is_superadmin=is_superadmin,
                            curr_page=page,
                            prev_page=prev_page,
@@ -708,7 +763,7 @@ def about_page():
         msg = 'Something wrong happens'
         return redirect(url_for('login_fn',msg=msg))
     # Jika payload terverifikasi maka kode dibawah akan di execute
-    return render_template("about.html")
+    return render_template("about.html",current_username=username)
 
 # Get info dari token tentang user
 @app.get("/api/me")
@@ -734,35 +789,6 @@ def get_info_me():
     user = table_users.find_one({"username":username},{"password":False})
     user["_id"] = str(user["_id"])
     return jsonify({"data":user})
-
-# Update user info, bio, gender ...
-@app.put("/api/me")
-def update_info_me():
-    # Ambil cookie
-    token_receive = request.cookies.get(TOKEN)
-    try:
-        # Buka konten cookie
-        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
-        username = payload['username']
-        # Payload terverifikasi
-        pass
-    except jwt.ExpiredSignatureError:
-        # Sesinya sudah lewat dari 24 Jam
-        msg = 'Your session has expired'
-        return redirect(url_for('login_fn',msg=msg))
-    except jwt.exceptions.DecodeError:
-        # Tidak ada token
-        msg = 'Something wrong happens'
-        return redirect(url_for('login_fn',msg=msg))
-    # Jika payload terverifikasi maka kode dibawah akan di execute
-    bio_receive = request.form.get('bio_give')
-    gender_receive = request.form.get('gender_give')
-    new_doc = {
-        "bio": bio_receive,
-        "gender": gender_receive,
-    }
-    table_users.update_one({"username":username},{"$set":new_doc})
-    return jsonify({"msg":"Item updated"})
     
 # Endpoint ambil path images
 @app.get("/api/images") # Optional args skip and limit, contoh : /api/images?skip=0&limit=10
@@ -894,7 +920,7 @@ def create_images():
             "title": title_receive,
             "deskripsi": deskripsi_receive,
             "kategori": kategori_receive,
-            "date": datetime.now().strftime("%d-%m-%y %H:%M:%S")
+            "date": datetime.now().strftime("%d-%m-%Y %H:%M:%S")
         }
         # Masukkan url ke database
         table_photos.insert_one(doc)
@@ -945,9 +971,9 @@ def delete_images():
     table_comments.delete_many({"post_id":image_id})
     return jsonify({"msg":"Image deleted"})
 
-# Endpoint update foto profil
-@app.put("/api/profile/image")
-def update_profile_image():
+# Endpoint update foto profil, about, bio
+@app.put("/api/me")
+def update_user_me():
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
     try:
@@ -964,9 +990,14 @@ def update_profile_image():
         msg = 'Something wrong happens'
         return redirect(url_for('login_fn',msg=msg))
     # Jika payload terverifikasi maka kode dibawah akan di execute
+    bio_receive = request.form.get('bio_give','')
+    gender_receive = request.form.get('gender_give','')
+    print(bio_receive,gender_receive)
+    doc = {}
     # Cek jika file telah terupload
     if 'file_give' in request.files:
         file = request.files['file_give']
+        
         # Amankan filename dari karakter spesial
         filename = secure_filename(file.filename)
         extension = os.path.splitext(filename)[-1].replace('.','')
@@ -996,15 +1027,22 @@ def update_profile_image():
 
         # Delete temp file
         os.remove(file_save_path)
-        doc = {"profile_pic": StorageURL+"static/"+file_path,
-               "profile_pic_repo":file_path}
-        # Masukkan url ke database
-        # $set adalah cara mongodb mengupdate suatu document dalam table
-        table_users.update_one(filter={"username":username},update={"$set":doc})
-        return {"msg":"Photo uploaded"}
-    else:
-        # Foto tidak terupload
-        return {"msg":"No image uploaded"},404 # Not found
+        doc["profile_pic"] = StorageURL+"static/"+file_path
+        doc["profile_pic_repo"] =file_path
+        # Append profile pic ke doc untuk diupdate di database
+        update_comment_pp = {
+            "profile_pic": StorageURL+"static/"+file_path
+        }
+        table_comments.update_many({"username":username},{"$set":update_comment_pp})
+
+    if bio_receive != '':
+        doc["bio"] = bio_receive
+    if gender_receive != '':
+        doc["gender"] = gender_receive
+    # Masukkan url ke database
+    # $set adalah cara mongodb mengupdate suatu document dalam table
+    table_users.update_one(filter={"username":username},update={"$set":doc})
+    return {"msg":"Photo uploaded. Items updated"}
 
 # Login page
 @app.get("/login")
@@ -1035,12 +1073,12 @@ def sign_up():
         "gender": "N/A",
         "is_superadmin": False,
         "choose_collection": "My Collection",
-        "date": datetime.now().strftime("%d-%m-%y %H:%M:%S")
+        "date": datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     }
     doc_default_collection = {
         "collection_name":"My Collection",
         "username":username_receive,
-        "date":datetime.now().strftime("%d-%m-%y %H:%M:%S")
+        "date":datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     }
     # Masukkan ke database
     table_users.insert_one(doc)
