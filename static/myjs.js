@@ -461,6 +461,29 @@ function save_user_info_button() {
         }
     })
 }
+function save_collection_button() {
+    const buttonSaveUpload = $("#button-save-collection");
+    buttonSaveUpload.empty();
+    buttonSaveUpload.append(`<progress class="progress is-small is-link my-3" max="100">Uploading</progress>`);
+    let collectionName = $("#collection-name-new").val();
+    let chooseCollectionNew = $("#collection-choose-new").prop('checked');
+    $.ajax({
+        type: 'POST',
+        url: '/api/collection/create',
+        data: {
+            "collection_name_give": collectionName,
+            "choose_created_collection": chooseCollectionNew
+        },
+        success: function (response, textStatus, xhr) {
+            if (xhr.status == 200) {
+                // Reload the page
+                window.location.reload();
+            } else {
+                alert('Something went wrong ' + response["msg"]);
+            }
+        }
+    })
+}
 function getSelectedTags() {
     let selectedTags = [];
     $('.tags-list-unique.is-success').each(function () {
@@ -573,9 +596,25 @@ function deleteImage(id) {
         }
     })
 }
-// function changeBookmarkCollection() {
-
-// }
+function changeBookmarkCollection(collection_name) {
+    const boxIconSelect = $('#icon-box-' + collection_name);
+    boxIconSelect.empty();
+    boxIconSelect.append(`<i class="fas fa-spinner fa-spin"></i>`);
+    $.ajax({
+        url: "/api/collection/select",
+        type: "PUT",
+        data: {
+            "collection_name_give": collection_name,
+        },
+        success: function (response) {
+            if (response["status"] == "updated") {
+                window.location.reload();
+            } else {
+                alert('Something went wrong ' + response["msg"]);
+            }
+        }
+    })
+}
 function uploadComment(post_id = '') {
     let commentInput = $("#input-text-area-comment");
     let commentGive = commentInput.val();
@@ -632,6 +671,15 @@ function from_page_backtrack_listener() {
         if (modal.length) {
             modal.addClass('is-active'); // Add a class to show the modal
         }
+    }
+}
+function GoBackRefresh(event) {
+    if ('referrer' in document) {
+        window.location = document.referrer;
+        /* OR */
+        //location.replace(document.referrer);
+    } else {
+        window.history.back();
     }
 }
 function from_sidebar_user_edit() {

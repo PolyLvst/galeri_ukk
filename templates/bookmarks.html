@@ -73,8 +73,10 @@
                 <!-- search bar -->
                 <div class="mx-5 my-5">
                     <div class="search">
-                        <span class="search-icon material-symbols-outlined" onclick="search_images_redirect()">search</span>
-                        <input class="search-input" type="search" placeholder="Search" onkeydown="search_images_redirect()">
+                        <span class="search-icon material-symbols-outlined"
+                            onclick="search_images_redirect()">search</span>
+                        <input class="search-input" type="search" placeholder="Search"
+                            onkeydown="search_images_redirect()">
                     </div>
                 </div>
                 <div class="mx-5 my-5">
@@ -88,7 +90,8 @@
     <div class="overlay sidebar-listener"></div>
     <div class="sidebar">
         <div class="mx-5 my-4">
-            <figure class="profile-pic" id="sidebar-user-profile-picture" onclick="window.location.href = '/user/{{ current_username }}'">
+            <figure class="profile-pic" id="sidebar-user-profile-picture"
+                onclick="window.location.href = '/user/{{ current_username }}'">
                 <img class="is-rounded" src="../static/defaults/48x48.png">
             </figure>
             <div class="has-text-white mt-4">
@@ -100,7 +103,8 @@
                     <p class="is-size-7 has-text-weight-light">About</p>
                     <div>
                         <p id="sidebar-user-about">...</p>
-                        <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon" onclick="window.location.href = '/user/{{ current_username }}#modal-edit-info'">
+                        <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon"
+                            onclick="window.location.href = '/user/{{ current_username }}#modal-edit-info'">
                     </div>
                 </div>
                 <!-- Max 30 character -->
@@ -108,7 +112,8 @@
                     <p class="is-size-7 has-text-weight-light">Gender</p>
                     <div>
                         <p id="sidebar-user-gender">N/A</p>
-                        <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon" onclick="window.location.href = '/user/{{ current_username }}#modal-edit-info'">
+                        <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon"
+                            onclick="window.location.href = '/user/{{ current_username }}#modal-edit-info'">
                     </div>
                 </div>
                 <hr class="separator">
@@ -139,8 +144,13 @@
             </div>
         </div>
     </div>
+    <!-- Create new collection -->
+    <div class="has-text-right mb-3 mt-3">
+        <button class="button is-link is-outlined mx-5 modal-button" id="collection-new"
+            data-target="modal-collection-new">Create New</button>
+    </div>
     <div class="my-4 mx-6">
-        <a onclick="window.history.back()">
+        <a onclick="GoBackRefresh()">
             <span class="icon-text">
                 <span class="icon">
                     <i class="fa-solid fa-arrow-left"></i>
@@ -156,17 +166,31 @@
             {% set max_index_preview = data['previews'] | length %}
             <div class="column is-3">
                 <div class="card px-2 py-3">
-                    <div class="has-text-centered">
-                        <p class="card-header-title is-centered">{{ data['collection_name'] }}</p>
+                    <div class="has-text-centered my-3">
+                        <span class="icon-text is-centered">
+                            <span>
+                                {{ data['collection_name'] }}
+                            </span>
+                            {% if data['collection_name'] == user_choose_collection %}
+                            <span class="icon has-text-success">
+                                <i class="fa-solid fa-square-check"></i>
+                            </span>
+                            {% else %}
+                            <span class="icon has-text-gray" onclick="changeBookmarkCollection('{{ data['collection_name'] }}')" id="icon-box-{{ data['collection_name'] }}">
+                                <i class="fa-regular fa-square"></i>
+                            </span>
+                            {% endif %}
+                        </span>
                     </div>
                     <div class="card pl-1">
                         <div class="card-image" style="overflow: hidden;">
-                            <div class="columns is-multiline is-mobile" onclick="window.location.href = '/?collection={{ data['_id'] }}'">
+                            <div class="columns is-multiline is-mobile"
+                                onclick="window.location.href = '/?collection={{ data['_id'] }}'">
                                 {% for row in range(4) %}
                                 <div class="column is-half">
                                     <figure class="image is-96x96 is-1by1">
-                                        {% if row < max_index_preview %}
-                                        <img src="{{ data['previews'][row]['image_thumbnail'] }}" alt="Bookmark preview"
+                                        {% if row < max_index_preview %} <img
+                                            src="{{ data['previews'][row]['image_thumbnail'] }}" alt="Bookmark preview"
                                             style="object-fit: cover;">
                                             {% else %}
                                             <img src="../static/defaults/48x48.png" alt="Bookmark preview"
@@ -176,11 +200,13 @@
                                 </div>
                                 {% endfor %}
                             </div>
-
                         </div>
                     </div>
-                    <div class="content">
-                        <p class="is-size-6">{{ data['date'] }}</p>
+                    <div class="content has-text-centered">
+                        <p class="is-size-7 has-text-weight-light has-text-grey mx-2">Created at {{ data['date'] }}</p>
+                        <span class="icon is-centered">
+                            <i class="fa-solid fa-trash"></i>
+                        </span>
                     </div>
                 </div>
             </div>
@@ -190,34 +216,61 @@
         <!-- next slide button -->
         <nav class="pagination is-centered" role="navigation" aria-label="pagination">
             {% if prev_page %}
-            <a href="/blog?page={{ prev_page }}" class="pagination-previous">Previous</a>
+            <a href="/bookmarks?page={{ prev_page }}" class="pagination-previous">Previous</a>
             {% else %}
             <a class="pagination-previous is-disabled">Previous</a>
             {% endif %}
             {% if next_page %}
-            <a href="/blog?page={{ next_page }}" class="pagination-next">Next page</a>
+            <a href="/bookmarks?page={{ next_page }}" class="pagination-next">Next page</a>
             {% else %}
             <a class="pagination-next is-disabled">Next page</a>
             {% endif %}
             <ul class="pagination-list">
-                <li><a href="/blog?page=1" class="pagination-link">1</a></li>
+                <li><a href="/bookmarks?page=1" class="pagination-link">1</a></li>
 
                 <li><span class="pagination-ellipsis">&hellip;</span></li>
 
                 {% if prev_page %}
-                <li><a href="/blog?page={{ prev_page }}" class="pagination-link">{{ prev_page }}</a></li>
+                <li><a href="/bookmarks?page={{ prev_page }}" class="pagination-link">{{ prev_page }}</a></li>
                 {% endif %}
                 <li><a class="pagination-link is-current">{{ curr_page }}</a></li>
                 {% if next_page %}
-                <li><a href="/blog?page={{ next_page }}" class="pagination-link">{{ next_page }}</a></li>
+                <li><a href="/bookmarks?page={{ next_page }}" class="pagination-link">{{ next_page }}</a></li>
                 {% endif %}
 
                 <li><span class="pagination-ellipsis">&hellip;</span></li>
-                <li><a href="/blog?page={{ end_page }}" class="pagination-link">{{ end_page }}</a></li>
+                <li><a href="/bookmarks?page={{ end_page }}" class="pagination-link">{{ end_page }}</a></li>
             </ul>
         </nav>
 
     </div>
+    <!-- Create collection -->
+    <div id="modal-collection-new" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content has-background py-5 px-5">
+            <h3 class="title mb-6">Create Collection</h3>
+            <!-- isi dalam upload -->
+            <div class="field">
+                <label class="label">Collection Name</label>
+                <div class="control">
+                    <input class="input is-link" type="text" placeholder="My Collection" id="collection-name-new">
+                </div>
+            </div>
+            <div class="field">
+                <label class="checkbox">
+                    <input type="checkbox" id="collection-choose-new" checked />
+                    Pilih koleksi ini
+                </label>
+            </div>
+
+            <div class="mt-6 has-text-centered" id="button-save-collection">
+                <button class="button is-link is-outlined" onclick="save_collection_button()">Save</button>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <!-- Bulma modal js -->
+    <script src="../static/modal-fx.min.js"></script>
     <script>
         burger_function();
         $(document).ready(function () {
