@@ -458,7 +458,7 @@ def create_collection():
         return redirect(url_for('login_fn',msg=msg))
     # Jika payload terverifikasi maka kode dibawah akan di execute
     collection_name_receive = request.form.get('collection_name_give','')
-    also_choose_new_collection = request.form.get('choose_created_collection',True)
+    also_choose_new_collection = request.form.get('choose_created_collection','true')
     if collection_name_receive == '':
         return jsonify({"msg":"Missing field","status":"not found"}),404 # Not found
     collection_exist = table_saved_collection.find_one({"username":username,"collection_name":collection_name_receive})
@@ -469,7 +469,7 @@ def create_collection():
         "collection_name":collection_name_receive,
         "date":datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     }
-    if also_choose_new_collection == True:
+    if also_choose_new_collection == "true":
         update_collection_choose = {
             "choose_collection":collection_name_receive
         }
@@ -496,14 +496,14 @@ def update_collection_choose():
         msg = 'Something wrong happens'
         return redirect(url_for('login_fn',msg=msg))
     # Jika payload terverifikasi maka kode dibawah akan di execute
-    collection_name_receive = request.form.get('collection_name_give','')
-    if collection_name_receive == '':
+    collection_id_receive = request.form.get('collection_id_give','')
+    if collection_id_receive == '':
         return jsonify({"msg":"Missing field","status":"not found"}),404 # Not found
-    collection_exist = table_saved_collection.find_one({"username":username,"collection_name":collection_name_receive})
+    collection_exist = table_saved_collection.find_one({"username":username,"_id":ObjectId(collection_id_receive)})
     if not collection_exist:
         return jsonify({"msg":"Collection not found","status":"not found"}),404 # Not found
     update_collection_choose = {
-        "choose_collection":collection_name_receive
+        "choose_collection":collection_exist.get("collection_name")
     }
     table_users.update_one({"username":username},{"$set":update_collection_choose})
     return jsonify({"msg":"Collection choosed","status":"updated"})
@@ -527,10 +527,10 @@ def delete_collection():
         msg = 'Something wrong happens'
         return redirect(url_for('login_fn',msg=msg))
     # Jika payload terverifikasi maka kode dibawah akan di execute
-    collection_name_receive = request.form.get('collection_name_give','')
-    if collection_name_receive == '':
+    collection_id_receive = request.form.get('collection_id_give','')
+    if collection_id_receive == '':
         return jsonify({"msg":"Missing field","status":"not found"}),404 # Not found
-    collection_exist = table_saved_collection.find_one({"username":username,"collection_name":collection_name_receive})
+    collection_exist = table_saved_collection.find_one({"username":username,"_id":ObjectId(collection_id_receive)})
     if not collection_exist:
         return jsonify({"msg":"Collection not found","status":"not found"}),404 # Not found
     # Delete bookmarks with collection_id
