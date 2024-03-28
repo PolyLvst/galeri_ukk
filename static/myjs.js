@@ -583,6 +583,41 @@ function deleteComment(comment_id) {
     })
 }
 
-function copyComment(copyComment_id){
-    
+// Menambahkan event listener ke elemen dokumen untuk menangani event klik pada tombol
+document.addEventListener('click', function (event) {
+    // Periksa apakah elemen yang diklik memiliki kelas "copy-button"
+    if (event.target.classList.contains('copy-button')) {
+        // Dapatkan teks komentar dari atribut data-comment
+        const commentText = event.target.getAttribute('data-comment');
+        // Panggil fungsi untuk menyalin komentar
+        copyComment(event.target, commentText);
+    }
+});
+
+// Fungsi untuk menyalin komentar ke clipboard dan menampilkan pesan pemberitahuan
+function copyComment(button, commentText) {
+    // Buat elemen textarea sementara untuk menyalin teks
+    const tempTextArea = document.createElement('textarea');
+    tempTextArea.value = commentText;
+    document.body.appendChild(tempTextArea);
+
+    // Pilih teks di textarea dan salin ke clipboard
+    tempTextArea.select();
+    document.execCommand('copy');
+
+    // Hapus elemen textarea sementara
+    document.body.removeChild(tempTextArea);
+
+    // Dapatkan elemen pesan pemberitahuan dari elemen parent tombol
+    const copiedMessage = button.parentElement.querySelector('.copied-message');
+
+    // Tampilkan pesan pemberitahuan
+    copiedMessage.style.display = 'block';
+
+    // Sembunyikan pesan pemberitahuan setelah beberapa detik
+    setTimeout(function () {
+        copiedMessage.style.display = 'none';
+    }, 2000); // Pesan akan disembunyikan setelah 2 detik
 }
+
+
