@@ -146,7 +146,7 @@ function listen_continue() {
         $("#password-checker").text('Please fill the password field');
         return;
     }
-
+    $("#password-checker").empty()
     if (verify_password === "") {
         $("#password-same").text('Please verify your password');
         return;
@@ -201,7 +201,13 @@ function listen_login_continue() {
         },
         error: function (xhr, status, error) {
             // Jika login gagal, tampilkan pesan error
-            alert(status, error);
+            console.log(error)
+            console.log(status)
+            console.log(xhr)
+            if (error == 'NOT FOUND') {
+                $("#anjim").text('Please check your username or password');
+                return;
+            }
         }
     });
 }
@@ -581,4 +587,34 @@ function deleteComment(comment_id) {
             }
         }
     })
+}
+
+function togglePassword() {
+    var passwordInput = document.getElementById("password");
+    var eyeIcon = document.getElementById("eye-icon");
+
+    if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        eyeIcon.classList.remove("fa-eye-slash");
+        eyeIcon.classList.add("fa-eye");
+    } else {
+        passwordInput.type = "password";
+        eyeIcon.classList.remove("fa-eye");
+        eyeIcon.classList.add("fa-eye-slash");
+    }
+}
+
+function toggleVerifyPassword() {
+    var passwordInput = document.getElementById("verify_password");
+    var eyeIcon = document.getElementById("eye-icon-verify");
+
+    if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        eyeIcon.classList.remove("fa-eye-slash");
+        eyeIcon.classList.add("fa-eye");
+    } else {
+        passwordInput.type = "password";
+        eyeIcon.classList.remove("fa-eye");
+        eyeIcon.classList.add("fa-eye-slash");
+    }
 }
