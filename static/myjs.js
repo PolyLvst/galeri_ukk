@@ -568,7 +568,6 @@ function toggleBookmark(id) {
         type: "POST",
         data: {
             "post_id_give": id,
-            "collection_id_give": "65ffb738b96613c66b748e1b"
         },
         success: function (response) {
             bookmarkIcon.empty();
@@ -596,15 +595,15 @@ function deleteImage(id) {
         }
     })
 }
-function changeBookmarkCollection(collection_name) {
-    const boxIconSelect = $('#icon-box-' + collection_name);
+function changeBookmarkCollection(collection_id) {
+    const boxIconSelect = $('#icon-box-' + collection_id);
     boxIconSelect.empty();
     boxIconSelect.append(`<i class="fas fa-spinner fa-spin"></i>`);
     $.ajax({
         url: "/api/collection/select",
         type: "PUT",
         data: {
-            "collection_name_give": collection_name,
+            "collection_id_give": collection_id,
         },
         success: function (response) {
             if (response["status"] == "updated") {
@@ -692,15 +691,16 @@ function from_sidebar_user_edit() {
         }
     }
 }
-function deleteCollection(collection_name) {
-    const deleteIcon = $('#icon-delete-collection-' + collection_name);
+function deleteCollection(collection_id) {
+    const deleteIcon = $('#icon-delete-collection-' + collection_id);
+    console.log('#icon-delete-collection-' + collection_id);
     deleteIcon.empty();
     deleteIcon.append(`<i class="fas fa-spinner fa-spin"></i>`);
     $.ajax({
         url: "/api/collection/delete",
         type: "DELETE",
         data: {
-            "collection_name_give": collection_name,
+            "collection_id_give": collection_id,
         },
         success: function (response) {
             window.location.reload();

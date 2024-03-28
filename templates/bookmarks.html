@@ -177,8 +177,8 @@
                             </span>
                             {% else %}
                             <span class="icon has-text-gray"
-                                onclick="changeBookmarkCollection('{{ data['collection_name'] }}')"
-                                id="icon-box-{{ data['collection_name'] }}">
+                                onclick="changeBookmarkCollection('{{ data['_id'] }}')"
+                                id="icon-box-{{ data['_id'] }}">
                                 <i class="fa-regular fa-square"></i>
                             </span>
                             {% endif %}
@@ -211,7 +211,7 @@
                             <i class="fas fa-ban"></i>
                         </span>
                         {% else %}
-                        <span class="icon is-centered" onclick="deleteCollection('{{data['collection_name']}}')" id="icon-delete-collection-{{data['collection_name']}}">
+                        <span class="icon is-centered" onclick="deleteCollection('{{data['_id']}}')" id="icon-delete-collection-{{data['_id']}}">
                             <i class="fa-solid fa-trash"></i>
                         </span>
                         {% endif %}
