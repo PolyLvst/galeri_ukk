@@ -201,9 +201,7 @@ def count_like_images(posts:Union[list,dict],username:str):
     return posts
 
 def images_social(posts:Union[list,dict],username:str):
-    print(username)
     user_data = table_users.find_one({"username":username})
-    print(user_data)
     user_choose_collection = user_data.get('choose_collection','My Collection')
     collection = table_saved_collection.find_one({"username":username,"collection_name":user_choose_collection})
     collection_id = str(collection.get('_id'))
@@ -219,6 +217,17 @@ def images_social(posts:Union[list,dict],username:str):
         posts['like_by_me'] = bool(table_liked.find_one({'post_id':post_id,'username':username}))
         posts['bookmark_by_me'] = bool(table_bookmarks.find_one({'post_id':post_id,'username':username,'collection_id':collection_id}))
     return posts
+
+def mask_long_string(original_string:str,max_length:int=17):
+    # 12345678901234567
+    # My Collection From Last Year -> My Collection Fro...
+    if len(original_string) > max_length:
+        # Trim the original string to the maximum length and add "..."
+        trimmed_string = original_string[:max_length - 3] + "..."
+        return trimmed_string
+    else:
+        return original_string
+
 # -------------- ENDPOINT -------------- #
 
 @app.get("/")
@@ -499,45 +508,35 @@ def update_collection_choose():
     table_users.update_one({"username":username},{"$set":update_collection_choose})
     return jsonify({"msg":"Collection choosed","status":"updated"})
 
-# @app.post("/api/collection/create")
-# def create_collection():
-#     # Ambil cookie
-#     token_receive = request.cookies.get(TOKEN)
-#     try:
-#         # Buka konten cookie
-#         payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
-#         username = payload["username"]
-#         # Payload terverifikasi
-#         pass
-#     except jwt.ExpiredSignatureError:
-#         # Sesinya sudah lewat dari 24 Jam
-#         msg = 'Your session has expired'
-#         return redirect(url_for('login_fn',msg=msg))
-#     except jwt.exceptions.DecodeError:
-#         # Tidak ada token
-#         msg = 'Something wrong happens'
-#         return redirect(url_for('login_fn',msg=msg))
-#     # Jika payload terverifikasi maka kode dibawah akan di execute
-#     collection_name_receive = request.form.get('collection_name_give','')
-#     also_choose_new_collection = request.form.get('choose_created_collection',True)
-#     print(also_choose_new_collection)
-#     if collection_name_receive == '':
-#         return jsonify({"msg":"Missing field","status":"not found"}),404 # Not found
-#     collection_exist = table_saved_collection.find_one({"username":username,"collection_name":collection_name_receive})
-#     if collection_exist:
-#         return jsonify({"msg":"Collection already existed","status":"conflict"}),409 # Conflict
-#     doc = {
-#         "username":username,
-#         "collection_name":collection_name_receive,
-#         "date":datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-#     }
-#     if also_choose_new_collection == True:
-#         update_collection_choose = {
-#             "choose_collection":collection_name_receive
-#         }
-#         table_users.update_one({"username":username},{"$set":update_collection_choose})
-#     table_saved_collection.insert_one(doc)
-#     return jsonify({"msg":"Collection saved","status":"created"})
+@app.delete("/api/collection/delete")
+def delete_collection():
+    # Ambil cookie
+    token_receive = request.cookies.get(TOKEN)
+    try:
+        # Buka konten cookie
+        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        username = payload["username"]
+        # Payload terverifikasi
+        pass
+    except jwt.ExpiredSignatureError:
+        # Sesinya sudah lewat dari 24 Jam
+        msg = 'Your session has expired'
+        return redirect(url_for('login_fn',msg=msg))
+    except jwt.exceptions.DecodeError:
+        # Tidak ada token
+        msg = 'Something wrong happens'
+        return redirect(url_for('login_fn',msg=msg))
+    # Jika payload terverifikasi maka kode dibawah akan di execute
+    collection_name_receive = request.form.get('collection_name_give','')
+    if collection_name_receive == '':
+        return jsonify({"msg":"Missing field","status":"not found"}),404 # Not found
+    collection_exist = table_saved_collection.find_one({"username":username,"collection_name":collection_name_receive})
+    if not collection_exist:
+        return jsonify({"msg":"Collection not found","status":"not found"}),404 # Not found
+    # Delete bookmarks with collection_id
+    table_bookmarks.delete_many({"username":username,"collection_id":str(collection_exist.get('_id'))})
+    table_saved_collection.delete_one({"username":username,"collection_name":collection_exist.get('collection_name')})
+    return jsonify({"msg":"Collection deleted","status":"deleted"})
 
 @app.post("/api/bookmark")
 def update_bookmark():
@@ -559,15 +558,16 @@ def update_bookmark():
         return redirect(url_for('login_fn',msg=msg))
     # Jika payload terverifikasi maka kode dibawah akan di execute
     post_id = request.form.get('post_id_give','')
+    # Cari user
     user = table_users.find_one({'username':username})
+    # Cari koleksi id di user choose collection
     collection_id = table_saved_collection.find_one({"username":username,"collection_name":user.get("choose_collection")})
-
-    bookmark = table_bookmarks.find_one_and_delete({"username":username,"post_id":post_id})
-    collection = table_saved_collection.find_one({"_id":ObjectId(collection_id.get("_id"))})
+    # Cari bookmark dengan koleksi tsb
+    bookmark = table_bookmarks.find_one_and_delete({"username":username,"post_id":post_id,"collection_id":str(collection_id.get("_id"))})
     image = table_photos.find_one({"_id":ObjectId(post_id)})
     if bookmark:
         return jsonify({"msg":"Bookmark deleted","status":"deleted"})
-    if not collection:
+    if not collection_id:
         return jsonify({"msg":"Collection not found","status":"not found"}),404
     if not image:
         return jsonify({"msg":"Post not found","status":"not found"}),404
@@ -646,10 +646,7 @@ def bookmarks_page():
     collection_saved = list(table_saved_collection.find({"username":username}).sort("_id",-1).skip(skip).limit(limit=per_page))
     user_choose_collection = table_users.find_one({"username":username})
     for collection in collection_saved:
-        print(collection)
-        print({"collection_id":collection['_id'],"username":username})
         bookmarks_list = list(table_bookmarks.find({"collection_id":str(collection['_id']),"username":username}).sort("_id",-1).limit(limit=bookmarks_preview_amount))
-        print(bookmarks_list)
         if not bookmarks_list:
             print(collection['collection_name']," # --- Not found")
             # Maka koleksi masih baru atau kosong
@@ -1111,7 +1108,6 @@ def update_user_me():
     # Jika payload terverifikasi maka kode dibawah akan di execute
     bio_receive = request.form.get('bio_give','')
     gender_receive = request.form.get('gender_give','')
-    print(bio_receive,gender_receive)
     doc = {}
     # Cek jika file telah terupload
     if 'file_give' in request.files:
@@ -1242,7 +1238,6 @@ def sign_in():
     }
     # Buat token lalu encode
     token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
-    print(token)
     return jsonify({"result": "success","token": token})
 
 @app.post('/api/check_username')

@@ -692,3 +692,19 @@ function from_sidebar_user_edit() {
         }
     }
 }
+function deleteCollection(collection_name) {
+    const deleteIcon = $('#icon-delete-collection-' + collection_name);
+    deleteIcon.empty();
+    deleteIcon.append(`<i class="fas fa-spinner fa-spin"></i>`);
+    $.ajax({
+        url: "/api/collection/delete",
+        type: "DELETE",
+        data: {
+            "collection_name_give": collection_name,
+        },
+        success: function (response) {
+            window.location.reload();
+        }
+    })
+
+}

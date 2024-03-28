@@ -176,7 +176,9 @@
                                 <i class="fa-solid fa-square-check"></i>
                             </span>
                             {% else %}
-                            <span class="icon has-text-gray" onclick="changeBookmarkCollection('{{ data['collection_name'] }}')" id="icon-box-{{ data['collection_name'] }}">
+                            <span class="icon has-text-gray"
+                                onclick="changeBookmarkCollection('{{ data['collection_name'] }}')"
+                                id="icon-box-{{ data['collection_name'] }}">
                                 <i class="fa-regular fa-square"></i>
                             </span>
                             {% endif %}
@@ -204,9 +206,15 @@
                     </div>
                     <div class="content has-text-centered">
                         <p class="is-size-7 has-text-weight-light has-text-grey mx-2">Created at {{ data['date'] }}</p>
-                        <span class="icon is-centered">
+                        {% if data['collection_name'] == user_choose_collection %}
+                        <span class="icon has-text-danger">
+                            <i class="fas fa-ban"></i>
+                        </span>
+                        {% else %}
+                        <span class="icon is-centered" onclick="deleteCollection('{{data['collection_name']}}')" id="icon-delete-collection-{{data['collection_name']}}">
                             <i class="fa-solid fa-trash"></i>
                         </span>
+                        {% endif %}
                     </div>
                 </div>
             </div>
