@@ -83,7 +83,8 @@
   <div class="overlay sidebar-listener"></div>
   <div class="sidebar">
     <div class="mx-5 my-4">
-      <figure class="profile-pic" id="sidebar-user-profile-picture" onclick="window.location.href = '/user/{{ current_username }}'">
+      <figure class="profile-pic" id="sidebar-user-profile-picture"
+        onclick="window.location.href = '/user/{{ current_username }}'">
         <img class="is-rounded" src="../static/defaults/48x48.png">
       </figure>
       <div class="has-text-white mt-4">
@@ -95,7 +96,8 @@
           <p class="is-size-7 has-text-weight-light">About</p>
           <div>
             <p id="sidebar-user-about">...</p>
-            <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon" onclick="window.location.href = '/user/{{ current_username }}#modal-edit-info'">
+            <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon"
+              onclick="window.location.href = '/user/{{ current_username }}#modal-edit-info'">
           </div>
         </div>
         <!-- Max 30 character -->
@@ -103,7 +105,8 @@
           <p class="is-size-7 has-text-weight-light">Gender</p>
           <div>
             <p id="sidebar-user-gender">N/A</p>
-            <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon" onclick="window.location.href = '/user/{{ current_username }}#modal-edit-info'">
+            <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon"
+              onclick="window.location.href = '/user/{{ current_username }}#modal-edit-info'">
           </div>
         </div>
         <hr class="separator">
@@ -146,7 +149,8 @@
             </div>
             <div class="card-content">
               <div class="media">
-                <div class="media-left" style="overflow: hidden;" onclick="window.location.href = '/user/{{ poster_user['username'] }}'">
+                <div class="media-left" style="overflow: hidden;"
+                  onclick="window.location.href = '/user/{{ poster_user['username'] }}'">
                   <figure class="image is-48x48 is-1by1">
                     <img src="{{ poster_user['profile_pic'] }}" alt="Avatar {{ poster_user['username'] }}"
                       style="object-fit: cover;" />
@@ -154,7 +158,8 @@
                 </div>
                 <div class="media-content">
                   <p class="title is-4">{{ photo['title'] }}</p>
-                  <p class="subtitle is-6" onclick="window.location.href = '/user/{{ poster_user['username'] }}'">@{{ poster_user['username'] }}</p>
+                  <p class="subtitle is-6" onclick="window.location.href = '/user/{{ poster_user['username'] }}'">@{{
+                    poster_user['username'] }}</p>
                 </div>
               </div>
 
@@ -208,6 +213,9 @@
                   </span>
                 </a>
               </div>
+              <div id="dropup-area-collection">
+                <!-- Dropup message change collection -->
+              </div>
             </div>
           </div>
           <!-- TextArea -->
@@ -221,7 +229,8 @@
         {% for comment in comments %}
         <div class="box">
           <article class="media">
-            <div class="media-left" style="overflow: hidden;" onclick="window.location.href = '/user/{{ comment['username'] }}'">
+            <div class="media-left" style="overflow: hidden;"
+              onclick="window.location.href = '/user/{{ comment['username'] }}'">
               <figure class="image is-64x64 is-1by1">
                 <img src="{{ comment['profile_pic'] }}" alt="User profile pic" style="object-fit: cover;" />
               </figure>
@@ -229,7 +238,8 @@
             <div class="media-content">
               <div class="content">
                 <p>
-                  <strong onclick="window.location.href = '/user/{{ comment['username'] }}'">@{{ comment['username'] }}</strong>
+                  <strong onclick="window.location.href = '/user/{{ comment['username'] }}'">@{{ comment['username']
+                    }}</strong>
                   <br />
                   {% if is_superadmin or comment['username'] == current_username %}
                   <span class="icon" id="delete-icon-comment-{{ comment['_id'] }}"
@@ -253,6 +263,9 @@
   <div id="modals-image-fullscreen">
     <div id="modal-image-{{ photo['_id'] }}" class="modal modal-fx-superScaled">
       <div class="modal-background">
+        <div id="dropup-area-collection">
+          <!-- Dropup message change collection -->
+        </div>
         <div class="mx-4 column box bottom-content has-text-centered">
           <span class="icon" id="bookmark-icon-modals-fullscreen-{{ photo['_id'] }}"
             onclick="toggleBookmark('{{ photo['_id'] }}')">
