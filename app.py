@@ -178,6 +178,10 @@ def search_images_query(query:str=''):
     return results
 
 def count_like_images(posts:Union[list,dict],username:str):
+    user_data = table_users.find_one({"username":username})
+    user_choose_collection = user_data.get('choose_collection','My Collection')
+    collection = table_saved_collection.find_one({"username":username,"collection_name":user_choose_collection})
+    collection_id = str(collection.get('_id'))
     if isinstance(posts,list):
         idx = 0
         for post in posts:
@@ -185,33 +189,45 @@ def count_like_images(posts:Union[list,dict],username:str):
             posts[idx]['count_like'] = table_liked.count_documents({'post_id':post_id})
             posts[idx]['like_by_me'] = bool(table_liked.find_one({'post_id':post_id,'username':username}))
 
-            bookmark_by_me = table_bookmarks.find_one({'post_id':post_id,'username':username})
+            bookmark_by_me = table_bookmarks.find_one({'post_id':post_id,'username':username,'collection_id':collection_id})
             posts[idx]['bookmark_by_me'] = bool(bookmark_by_me)
-            # post['saved_in_collection'] = bool(table_saved_collection.find_one({'_id':ObjectId(bookmark_by_me.get('collection_id')),'username':username}))
             idx+=1
     else:
         post_id = str(posts.get('_id'))
         posts['like_by_me'] = bool(table_liked.find_one({'post_id':post_id,'username':username}))
-        posts['bookmark_by_me'] = bool(table_bookmarks.find_one({'post_id':post_id,'username':username}))
+        posts['bookmark_by_me'] = bool(table_bookmarks.find_one({'post_id':post_id,'username':username,'collection_id':collection_id}))
         posts['count_like'] = table_liked.count_documents({'post_id':post_id})
-        posts['like_by_me'] = bool(table_liked.find_one({'post_id':post_id,'username':username}))
 
     return posts
 
 def images_social(posts:Union[list,dict],username:str):
+    user_data = table_users.find_one({"username":username})
+    user_choose_collection = user_data.get('choose_collection','My Collection')
+    collection = table_saved_collection.find_one({"username":username,"collection_name":user_choose_collection})
+    collection_id = str(collection.get('_id'))
     if isinstance(posts,list):
         idx = 0
         for post in posts:
             post_id = str(post['_id'])
             posts[idx]['like_by_me'] = bool(table_liked.find_one({'post_id':post_id,'username':username}))
-            posts[idx]['bookmark_by_me'] = bool(table_bookmarks.find_one({'post_id':post_id,'username':username}))
-            # post['saved_in_collection'] = bool(table_saved_collection.find_one({'_id':ObjectId(bookmark_by_me.get('collection_id')),'username':username}))
+            posts[idx]['bookmark_by_me'] = bool(table_bookmarks.find_one({'post_id':post_id,'username':username,'collection_id':collection_id}))
             idx+=1
     else:
         post_id = str(posts.get('_id'))
         posts['like_by_me'] = bool(table_liked.find_one({'post_id':post_id,'username':username}))
-        posts['bookmark_by_me'] = bool(table_bookmarks.find_one({'post_id':post_id,'username':username}))
+        posts['bookmark_by_me'] = bool(table_bookmarks.find_one({'post_id':post_id,'username':username,'collection_id':collection_id}))
     return posts
+
+def mask_long_string(original_string:str,max_length:int=17):
+    # 12345678901234567
+    # My Collection From Last Year -> My Collection Fro...
+    if len(original_string) > max_length:
+        # Trim the original string to the maximum length and add "..."
+        trimmed_string = original_string[:max_length - 3] + "..."
+        return trimmed_string
+    else:
+        return original_string
+
 # -------------- ENDPOINT -------------- #
 
 @app.get("/")
@@ -240,8 +256,11 @@ def home():
     per_page = request.args.get('per_page', default=items_per_page_home, type=int) # Number of items per page
     query = request.args.get('query', '')
     collection = request.args.get('collection', '')
+    args_nav = "%26" # &
 
     if query != '':
+        # Untuk tombol navigasi bawah
+        args_nav = f'{args_nav}query={query}'
         results = search_images_query(query=query)
         total_items = len(results)  # Total number of items in the collection
         
@@ -251,7 +270,8 @@ def home():
         limit = skip + per_page
         photos = results[skip:limit]
     elif collection != '':
-        print(collection)
+        # Untuk tombol navigasi bawah
+        args_nav = f'{args_nav}collection={collection}'
         bookmarks_list = list(table_bookmarks.find({"collection_id":collection}).sort("_id",-1))
         total_items = len(bookmarks_list)
         skip,prev_page,next_page,end_page = get_pagination_count(items_per_page=per_page,page=page,total_items=total_items)
@@ -259,17 +279,15 @@ def home():
         skip = (page - 1) * per_page
         limit = skip + per_page
         bookmarks_list = bookmarks_list[skip:limit]
-        print(bookmarks_list)
         post_ids = [ObjectId(bookmark['post_id']) for bookmark in bookmarks_list]
-        print(post_ids)
         photos = list(table_photos.find({"_id": {"$in": post_ids}}).sort("_id",-1))
-        print(photos)
     else:
+        args_nav = ""
         total_items = table_photos.count_documents({})
         skip,prev_page,next_page,end_page = get_pagination_count(items_per_page=per_page,page=page,total_items=total_items)
 
         # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
-        photos = list(table_photos.find({}).sort("_id",-1).skip(skip=skip).limit(limit=per_page))
+        photos = list(table_photos.find({}).sort("_id",-1).skip(skip=skip).limit(limit=per_page))        
     photos = images_social(posts=photos,username=username)
     idx = 0
     for doc in photos:
@@ -283,8 +301,8 @@ def home():
                            prev_page=prev_page,
                            next_page=next_page,
                            end_page=end_page,
-                           query=query,
-                           collection_id=collection)
+                           args_nav=args_nav,
+                           query=query)
 
 @app.get("/detail/<post_id>")
 def get_detail_page(post_id=None):
@@ -306,6 +324,7 @@ def get_detail_page(post_id=None):
         msg = 'Something wrong happens'
         return redirect(url_for('login_fn',msg=msg))
     # Jika payload terverifikasi maka kode dibawah akan di execute
+    from_page = request.args.get("from_page","/")
     if not post_id or len(post_id) < 24:
         return redirect(url_for('home'))
     photo = table_photos.find_one({"_id":ObjectId(post_id)})
@@ -319,7 +338,8 @@ def get_detail_page(post_id=None):
                            poster_user=poster_user,
                            current_username=username,
                            is_superadmin=is_superadmin,
-                           comments=comments)
+                           comments=comments,
+                           from_page=from_page)
 
 @app.post("/api/comment/create")
 def create_comment():
@@ -350,7 +370,7 @@ def create_comment():
         "post_id":post_id_receive,
         "comment":comment_receive,
         "profile_pic":commenter.get("profile_pic"),
-        "date":datetime.now().strftime("%d-%m-%y %H:%M:%S")
+        "date":datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     }
 
     table_comments.insert_one(doc)
@@ -418,6 +438,106 @@ def bookmarks():
     return jsonify({"data":bookmarks})
     # return render_template('bookmarks.html')
 
+@app.post("/api/collection/create")
+def create_collection():
+    # Ambil cookie
+    token_receive = request.cookies.get(TOKEN)
+    try:
+        # Buka konten cookie
+        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        username = payload["username"]
+        # Payload terverifikasi
+        pass
+    except jwt.ExpiredSignatureError:
+        # Sesinya sudah lewat dari 24 Jam
+        msg = 'Your session has expired'
+        return redirect(url_for('login_fn',msg=msg))
+    except jwt.exceptions.DecodeError:
+        # Tidak ada token
+        msg = 'Something wrong happens'
+        return redirect(url_for('login_fn',msg=msg))
+    # Jika payload terverifikasi maka kode dibawah akan di execute
+    collection_name_receive = request.form.get('collection_name_give','')
+    also_choose_new_collection = request.form.get('choose_created_collection','true')
+    if collection_name_receive == '':
+        return jsonify({"msg":"Missing field","status":"not found"}),404 # Not found
+    collection_exist = table_saved_collection.find_one({"username":username,"collection_name":collection_name_receive})
+    if collection_exist:
+        return jsonify({"msg":"Collection already existed","status":"conflict"}),409 # Conflict
+    doc = {
+        "username":username,
+        "collection_name":collection_name_receive,
+        "date":datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+    }
+    if also_choose_new_collection == "true":
+        update_collection_choose = {
+            "choose_collection":collection_name_receive
+        }
+        table_users.update_one({"username":username},{"$set":update_collection_choose})
+    table_saved_collection.insert_one(doc)
+    return jsonify({"msg":"Collection saved","status":"created"})
+
+@app.put("/api/collection/select")
+def update_collection_choose():
+    # Ambil cookie
+    token_receive = request.cookies.get(TOKEN)
+    try:
+        # Buka konten cookie
+        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        username = payload["username"]
+        # Payload terverifikasi
+        pass
+    except jwt.ExpiredSignatureError:
+        # Sesinya sudah lewat dari 24 Jam
+        msg = 'Your session has expired'
+        return redirect(url_for('login_fn',msg=msg))
+    except jwt.exceptions.DecodeError:
+        # Tidak ada token
+        msg = 'Something wrong happens'
+        return redirect(url_for('login_fn',msg=msg))
+    # Jika payload terverifikasi maka kode dibawah akan di execute
+    collection_id_receive = request.form.get('collection_id_give','')
+    if collection_id_receive == '':
+        return jsonify({"msg":"Missing field","status":"not found"}),404 # Not found
+    collection_exist = table_saved_collection.find_one({"username":username,"_id":ObjectId(collection_id_receive)})
+    if not collection_exist:
+        return jsonify({"msg":"Collection not found","status":"not found"}),404 # Not found
+    update_collection_choose = {
+        "choose_collection":collection_exist.get("collection_name")
+    }
+    table_users.update_one({"username":username},{"$set":update_collection_choose})
+    return jsonify({"msg":"Collection choosed","status":"updated"})
+
+@app.delete("/api/collection/delete")
+def delete_collection():
+    # Ambil cookie
+    token_receive = request.cookies.get(TOKEN)
+    try:
+        # Buka konten cookie
+        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        username = payload["username"]
+        # Payload terverifikasi
+        pass
+    except jwt.ExpiredSignatureError:
+        # Sesinya sudah lewat dari 24 Jam
+        msg = 'Your session has expired'
+        return redirect(url_for('login_fn',msg=msg))
+    except jwt.exceptions.DecodeError:
+        # Tidak ada token
+        msg = 'Something wrong happens'
+        return redirect(url_for('login_fn',msg=msg))
+    # Jika payload terverifikasi maka kode dibawah akan di execute
+    collection_id_receive = request.form.get('collection_id_give','')
+    if collection_id_receive == '':
+        return jsonify({"msg":"Missing field","status":"not found"}),404 # Not found
+    collection_exist = table_saved_collection.find_one({"username":username,"_id":ObjectId(collection_id_receive)})
+    if not collection_exist:
+        return jsonify({"msg":"Collection not found","status":"not found"}),404 # Not found
+    # Delete bookmarks with collection_id
+    table_bookmarks.delete_many({"username":username,"collection_id":str(collection_exist.get('_id'))})
+    table_saved_collection.delete_one({"username":username,"collection_name":collection_exist.get('collection_name')})
+    return jsonify({"msg":"Collection deleted","status":"deleted"})
+
 @app.post("/api/bookmark")
 def update_bookmark():
     # Ambil cookie
@@ -438,15 +558,16 @@ def update_bookmark():
         return redirect(url_for('login_fn',msg=msg))
     # Jika payload terverifikasi maka kode dibawah akan di execute
     post_id = request.form.get('post_id_give','')
+    # Cari user
     user = table_users.find_one({'username':username})
+    # Cari koleksi id di user choose collection
     collection_id = table_saved_collection.find_one({"username":username,"collection_name":user.get("choose_collection")})
-
-    bookmark = table_bookmarks.find_one_and_delete({"username":username,"post_id":post_id})
-    collection = table_saved_collection.find_one({"_id":ObjectId(collection_id.get("_id"))})
+    # Cari bookmark dengan koleksi tsb
+    bookmark = table_bookmarks.find_one_and_delete({"username":username,"post_id":post_id,"collection_id":str(collection_id.get("_id"))})
     image = table_photos.find_one({"_id":ObjectId(post_id)})
     if bookmark:
         return jsonify({"msg":"Bookmark deleted","status":"deleted"})
-    if not collection:
+    if not collection_id:
         return jsonify({"msg":"Collection not found","status":"not found"}),404
     if not image:
         return jsonify({"msg":"Post not found","status":"not found"}),404
@@ -456,7 +577,7 @@ def update_bookmark():
         "post_id":post_id,
         "username":username,
         "collection_id":str(collection_id.get("_id")),
-        "date":datetime.now().strftime("%d-%m-%y %H:%M:%S")
+        "date":datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     }
     table_bookmarks.insert_one(doc)
     return jsonify({"msg":"Bookmarked","status":"created"})
@@ -489,7 +610,7 @@ def update_like():
     doc = {
         "post_id":post_id,
         "username":username,
-        "date":datetime.now().strftime("%d-%m-%y %H:%M:%S")
+        "date":datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     }
     table_liked.insert_one(doc)
     return jsonify({"msg":"Liked","status":"created"})
@@ -523,11 +644,9 @@ def bookmarks_page():
     bookmarks_preview_amount = 4
     # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
     collection_saved = list(table_saved_collection.find({"username":username}).sort("_id",-1).skip(skip).limit(limit=per_page))
+    user_choose_collection = table_users.find_one({"username":username})
     for collection in collection_saved:
-        print(collection)
-        print({"collection_id":collection['_id'],"username":username})
         bookmarks_list = list(table_bookmarks.find({"collection_id":str(collection['_id']),"username":username}).sort("_id",-1).limit(limit=bookmarks_preview_amount))
-        print(bookmarks_list)
         if not bookmarks_list:
             print(collection['collection_name']," # --- Not found")
             # Maka koleksi masih baru atau kosong
@@ -548,7 +667,9 @@ def bookmarks_page():
                         curr_page = page,
                         end_page = end_page,
                         prev_page = prev_page,
-                        next_page = next_page)
+                        next_page = next_page,
+                        current_username=username,
+                        user_choose_collection=user_choose_collection.get('choose_collection'))
 
 @app.get("/api/search")
 def search():
@@ -575,6 +696,9 @@ def search():
 
     page = request.args.get('page', default=1, type=int)
     per_page = request.args.get('per_page', default=items_per_page, type=int) # Number of items per page
+    args_nav = "%26" # &
+    # Untuk tombol navigasi bawah
+    args_nav = f'{args_nav}query={query}'
 
     results = search_images_query(query=query)
     
@@ -598,7 +722,8 @@ def search():
                     "curr_page":page,
                     "prev_page":prev_page,
                     "next_page":next_page,
-                    "end_page":end_page})
+                    "end_page":end_page,
+                    "args_nav":args_nav})
 
 @app.get("/blog")
 def blog():
@@ -638,6 +763,52 @@ def blog():
     return render_template('blog.html',
                            images=photos,
                            current_username=username,
+                           is_superadmin=is_superadmin,
+                           curr_page=page,
+                           prev_page=prev_page,
+                           next_page=next_page,
+                           end_page=end_page)
+
+@app.get("/user/<user_name>")
+def user_gallery(user_name):
+    # Ambil cookie
+    token_receive = request.cookies.get(TOKEN)
+    try:
+        # Buka konten cookie
+        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        username = payload["username"]
+        is_superadmin = payload["is_superadmin"]
+        # Payload terverifikasi
+        pass
+    except jwt.ExpiredSignatureError:
+        # Sesinya sudah lewat dari 24 Jam
+        msg = 'Your session has expired'
+        return redirect(url_for('login_fn',msg=msg))
+    except jwt.exceptions.DecodeError:
+        # Tidak ada token
+        msg = 'Something wrong happens'
+        return redirect(url_for('login_fn',msg=msg))
+    # Jika payload terverifikasi maka kode dibawah akan di execute
+    items_per_page_blog = 12
+
+    page = request.args.get('page', default=1, type=int)
+    per_page = request.args.get('per_page', default=items_per_page_blog, type=int) # Number of items per page
+
+    total_items = table_photos.count_documents({"username":user_name})
+    skip,prev_page,next_page,end_page = get_pagination_count(items_per_page=per_page,page=page,total_items=total_items)
+
+    # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
+    photos = list(table_photos.find({"username":user_name}).sort("_id",-1).skip(skip=skip).limit(limit=per_page))
+    photos = images_social(posts=photos,username=user_name)
+    user_name = table_users.find_one({"username":user_name})
+    idx = 0
+    for doc in photos:
+        photos[idx]["_id"] = str(doc["_id"])
+        idx += 1
+    return render_template('galleryUser.html',
+                           images=photos,
+                           current_username=username,
+                           user_name=user_name,
                            is_superadmin=is_superadmin,
                            curr_page=page,
                            prev_page=prev_page,
@@ -708,7 +879,7 @@ def about_page():
         msg = 'Something wrong happens'
         return redirect(url_for('login_fn',msg=msg))
     # Jika payload terverifikasi maka kode dibawah akan di execute
-    return render_template("about.html")
+    return render_template("about.html",current_username=username)
 
 # Get info dari token tentang user
 @app.get("/api/me")
@@ -734,35 +905,6 @@ def get_info_me():
     user = table_users.find_one({"username":username},{"password":False})
     user["_id"] = str(user["_id"])
     return jsonify({"data":user})
-
-# Update user info, bio, gender ...
-@app.put("/api/me")
-def update_info_me():
-    # Ambil cookie
-    token_receive = request.cookies.get(TOKEN)
-    try:
-        # Buka konten cookie
-        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
-        username = payload['username']
-        # Payload terverifikasi
-        pass
-    except jwt.ExpiredSignatureError:
-        # Sesinya sudah lewat dari 24 Jam
-        msg = 'Your session has expired'
-        return redirect(url_for('login_fn',msg=msg))
-    except jwt.exceptions.DecodeError:
-        # Tidak ada token
-        msg = 'Something wrong happens'
-        return redirect(url_for('login_fn',msg=msg))
-    # Jika payload terverifikasi maka kode dibawah akan di execute
-    bio_receive = request.form.get('bio_give')
-    gender_receive = request.form.get('gender_give')
-    new_doc = {
-        "bio": bio_receive,
-        "gender": gender_receive,
-    }
-    table_users.update_one({"username":username},{"$set":new_doc})
-    return jsonify({"msg":"Item updated"})
     
 # Endpoint ambil path images
 @app.get("/api/images") # Optional args skip and limit, contoh : /api/images?skip=0&limit=10
@@ -894,7 +1036,7 @@ def create_images():
             "title": title_receive,
             "deskripsi": deskripsi_receive,
             "kategori": kategori_receive,
-            "date": datetime.now().strftime("%d-%m-%y %H:%M:%S")
+            "date": datetime.now().strftime("%d-%m-%Y %H:%M:%S")
         }
         # Masukkan url ke database
         table_photos.insert_one(doc)
@@ -945,9 +1087,9 @@ def delete_images():
     table_comments.delete_many({"post_id":image_id})
     return jsonify({"msg":"Image deleted"})
 
-# Endpoint update foto profil
-@app.put("/api/profile/image")
-def update_profile_image():
+# Endpoint update foto profil, about, bio
+@app.put("/api/me")
+def update_user_me():
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
     try:
@@ -964,9 +1106,13 @@ def update_profile_image():
         msg = 'Something wrong happens'
         return redirect(url_for('login_fn',msg=msg))
     # Jika payload terverifikasi maka kode dibawah akan di execute
+    bio_receive = request.form.get('bio_give','')
+    gender_receive = request.form.get('gender_give','')
+    doc = {}
     # Cek jika file telah terupload
     if 'file_give' in request.files:
         file = request.files['file_give']
+        
         # Amankan filename dari karakter spesial
         filename = secure_filename(file.filename)
         extension = os.path.splitext(filename)[-1].replace('.','')
@@ -996,15 +1142,22 @@ def update_profile_image():
 
         # Delete temp file
         os.remove(file_save_path)
-        doc = {"profile_pic": StorageURL+"static/"+file_path,
-               "profile_pic_repo":file_path}
-        # Masukkan url ke database
-        # $set adalah cara mongodb mengupdate suatu document dalam table
-        table_users.update_one(filter={"username":username},update={"$set":doc})
-        return {"msg":"Photo uploaded"}
-    else:
-        # Foto tidak terupload
-        return {"msg":"No image uploaded"},404 # Not found
+        doc["profile_pic"] = StorageURL+"static/"+file_path
+        doc["profile_pic_repo"] =file_path
+        # Append profile pic ke doc untuk diupdate di database
+        update_comment_pp = {
+            "profile_pic": StorageURL+"static/"+file_path
+        }
+        table_comments.update_many({"username":username},{"$set":update_comment_pp})
+
+    if bio_receive != '':
+        doc["bio"] = bio_receive
+    if gender_receive != '':
+        doc["gender"] = gender_receive
+    # Masukkan url ke database
+    # $set adalah cara mongodb mengupdate suatu document dalam table
+    table_users.update_one(filter={"username":username},update={"$set":doc})
+    return {"msg":"Photo uploaded. Items updated"}
 
 # Login page
 @app.get("/login")
@@ -1035,12 +1188,12 @@ def sign_up():
         "gender": "N/A",
         "is_superadmin": False,
         "choose_collection": "My Collection",
-        "date": datetime.now().strftime("%d-%m-%y %H:%M:%S")
+        "date": datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     }
     doc_default_collection = {
         "collection_name":"My Collection",
         "username":username_receive,
-        "date":datetime.now().strftime("%d-%m-%y %H:%M:%S")
+        "date":datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     }
     # Masukkan ke database
     table_users.insert_one(doc)
@@ -1085,7 +1238,6 @@ def sign_in():
     }
     # Buat token lalu encode
     token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
-    print(token)
     return jsonify({"result": "success","token": token})
 
 @app.post('/api/check_username')

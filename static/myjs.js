@@ -272,6 +272,10 @@ function search_images() {
     const galleryContent = $('#gallery');
     const modalsContent = $('#modals-image-fullscreen');
     const paginationParent = $('#pagination-parent-nav');
+    const searchIcon = $('#search-bar-icon-index');
+    searchIcon.removeClass();
+    searchIcon.empty();
+    searchIcon.append(`<i class="mx-1 fas fa-spinner fa-spin"></i>`);
     // Ambil value search bar
     let searchBarContent = searchBar.val();
     $.ajax({
@@ -282,6 +286,10 @@ function search_images() {
             let results = response["results"];
             galleryContent.empty();
             modalsContent.empty();
+
+            searchIcon.empty();
+            searchIcon.addClass('search-icon material-symbols-outlined');
+            searchIcon.text('search');
             for (idx in results) {
                 let tempHtml = `
                 <div class="card my-2 mx-2 modal-button grid-items-masonry" data-target="modal-image-${results[idx]["_id"]}">
@@ -314,14 +322,14 @@ function search_images() {
                     tempHtmlModals += `<i class="fa-regular fa-heart"></i>`;
                 };
                 tempHtmlModals += `</span>
-                                <span class="icon ml-4" onclick="alert('Commented')">
+                                <span class="icon ml-4" onclick="event.stopPropagation();window.location.href = '/detail/${results[idx]["_id"]}?from_page=/?page=${response['curr_page']}${response['args_nav']}'">
                                     <i class="fa-solid fa-comment"></i>
                                 </span>
                 `;
                 if (response['is_superadmin'] || results[idx]['username'] === response['username']) {
                     // Adalah superadmin atau image ini milik user tsb
                     tempHtmlModals += `
-                    <span class="icon ml-4" onclick="alert('Deleted')">
+                    <span class="icon ml-4" onclick="deleteImage('${results[idx]["_id"]}')">
                     <i class="fa-solid fa-trash"></i>
                     </span>
                     `;
@@ -424,6 +432,58 @@ function upload_button() {
         }
     })
 }
+function save_user_info_button() {
+    const buttonSaveUpload = $("#button-save-upload-image-profile");
+    buttonSaveUpload.empty();
+    buttonSaveUpload.append(`<progress class="progress is-small is-link my-3" max="100">Uploading</progress>`);
+    let bioUpload = $("#bio-upload").val();
+    let genderUpload = $("#gender-upload").val();
+    let fileUpload = $("#file-input-upload-profile")[0].files[0];
+    let form_data = new FormData();
+    form_data.append('file_give', fileUpload);
+    form_data.append('bio_give', bioUpload);
+    form_data.append('gender_give', genderUpload);
+    let urlWithoutHash = window.location.href.split('#')[0];
+    $.ajax({
+        type: 'PUT',
+        url: '/api/me',
+        cache: false,
+        processData: false,
+        contentType: false,
+        data: form_data,
+        success: function (response, textStatus, xhr) {
+            if (xhr.status == 200) {
+                // Reload the page with the modified URL
+                window.location.href = urlWithoutHash;
+            } else {
+                alert('Something went wrong ' + response["msg"]);
+            }
+        }
+    })
+}
+function save_collection_button() {
+    const buttonSaveUpload = $("#button-save-collection");
+    buttonSaveUpload.empty();
+    buttonSaveUpload.append(`<progress class="progress is-small is-link my-3" max="100">Uploading</progress>`);
+    let collectionName = $("#collection-name-new").val();
+    let chooseCollectionNew = $("#collection-choose-new").prop('checked');
+    $.ajax({
+        type: 'POST',
+        url: '/api/collection/create',
+        data: {
+            "collection_name_give": collectionName,
+            "choose_created_collection": chooseCollectionNew
+        },
+        success: function (response, textStatus, xhr) {
+            if (xhr.status == 200) {
+                // Reload the page
+                window.location.reload();
+            } else {
+                alert('Something went wrong ' + response["msg"]);
+            }
+        }
+    })
+}
 function getSelectedTags() {
     let selectedTags = [];
     $('.tags-list-unique.is-success').each(function () {
@@ -445,13 +505,18 @@ function toggleTags(targetId, tagsName) {
     }
 }
 function file_upload_image_namer() {
-    const fileInput = document.querySelector("#file-upload-images-div input[type=file]");
-    fileInput.onchange = () => {
-        if (fileInput.files.length > 0) {
-            const fileName = document.querySelector("#file-upload-images-div .file-name");
-            fileName.textContent = fileInput.files[0].name;
+    $('#file-upload-images-div input[type=file]').on('change', function () {
+        if (this.files.length > 0) {
+            $('#file-upload-images-div .file-name').text(this.files[0].name);
         }
-    };
+    });
+}
+function file_upload_image_namer_profile() {
+    $('#file-upload-images-div-profile input[type=file]').on('change', function () {
+        if (this.files.length > 0) {
+            $('#file-upload-images-div-profile #file-name-profile').text(this.files[0].name);
+        }
+    });
 }
 function toggleLike(id) {
     event.stopPropagation();
@@ -503,7 +568,6 @@ function toggleBookmark(id) {
         type: "POST",
         data: {
             "post_id_give": id,
-            "collection_id_give": "65ffb738b96613c66b748e1b"
         },
         success: function (response) {
             bookmarkIcon.empty();
@@ -527,13 +591,29 @@ function deleteImage(id) {
             "image_id_give": id,
         },
         success: function (response) {
-            window.location.href = '/';
+            window.location.reload();
         }
     })
 }
-// function changeBookmarkCollection() {
-
-// }
+function changeBookmarkCollection(collection_id) {
+    const boxIconSelect = $('#icon-box-' + collection_id);
+    boxIconSelect.empty();
+    boxIconSelect.append(`<i class="fas fa-spinner fa-spin"></i>`);
+    $.ajax({
+        url: "/api/collection/select",
+        type: "PUT",
+        data: {
+            "collection_id_give": collection_id,
+        },
+        success: function (response) {
+            if (response["status"] == "updated") {
+                window.location.reload();
+            } else {
+                alert('Something went wrong ' + response["msg"]);
+            }
+        }
+    })
+}
 function uploadComment(post_id = '') {
     let commentInput = $("#input-text-area-comment");
     let commentGive = commentInput.val();
@@ -581,4 +661,50 @@ function deleteComment(comment_id) {
             }
         }
     })
+}
+function from_page_backtrack_listener() {
+    var hash = window.location.hash; // Ambil value pagar contoh = localhost:5000/#modal-image-112233
+    if (hash && hash.startsWith('#modal-image')) {
+        var modalId = hash.substr(1); // Remove the "#" from the hash
+        var modal = $('#' + modalId);
+        if (modal.length) {
+            modal.addClass('is-active'); // Add a class to show the modal
+        }
+    }
+}
+function GoBackRefresh(event) {
+    if ('referrer' in document) {
+        window.location = document.referrer;
+        /* OR */
+        //location.replace(document.referrer);
+    } else {
+        window.history.back();
+    }
+}
+function from_sidebar_user_edit() {
+    var hash = window.location.hash; // Ambil value pagar contoh = localhost:5000/#modal-image-112233
+    if (hash && hash.startsWith('#modal-edit-info')) {
+        var modalId = hash.substr(1); // Remove the "#" from the hash
+        var modal = $('#' + modalId);
+        if (modal.length) {
+            modal.addClass('is-active'); // Add a class to show the modal
+        }
+    }
+}
+function deleteCollection(collection_id) {
+    const deleteIcon = $('#icon-delete-collection-' + collection_id);
+    console.log('#icon-delete-collection-' + collection_id);
+    deleteIcon.empty();
+    deleteIcon.append(`<i class="fas fa-spinner fa-spin"></i>`);
+    $.ajax({
+        url: "/api/collection/delete",
+        type: "DELETE",
+        data: {
+            "collection_id_give": collection_id,
+        },
+        success: function (response) {
+            window.location.reload();
+        }
+    })
+
 }

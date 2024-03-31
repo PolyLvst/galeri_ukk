@@ -4,6 +4,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Icon Tab -->
+  <link rel="icon" type="image/x-icon" href="../static/assets/icon.png">
   <!-- Google fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -81,7 +83,7 @@
   <div class="overlay sidebar-listener"></div>
   <div class="sidebar">
     <div class="mx-5 my-4">
-      <figure class="profile-pic" id="sidebar-user-profile-picture">
+      <figure class="profile-pic" id="sidebar-user-profile-picture" onclick="window.location.href = '/user/{{ current_username }}'">
         <img class="is-rounded" src="../static/defaults/48x48.png">
       </figure>
       <div class="has-text-white mt-4">
@@ -93,7 +95,7 @@
           <p class="is-size-7 has-text-weight-light">About</p>
           <div>
             <p id="sidebar-user-about">...</p>
-            <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon">
+            <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon" onclick="window.location.href = '/user/{{ current_username }}#modal-edit-info'">
           </div>
         </div>
         <!-- Max 30 character -->
@@ -101,7 +103,7 @@
           <p class="is-size-7 has-text-weight-light">Gender</p>
           <div>
             <p id="sidebar-user-gender">N/A</p>
-            <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon">
+            <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon" onclick="window.location.href = '/user/{{ current_username }}#modal-edit-info'">
           </div>
         </div>
         <hr class="separator">
@@ -138,7 +140,7 @@
   </div>
   <div id="modal-upload" class="modal">
     <div class="modal-background"></div>
-    <div class="modal-content has-background-white py-5 px-5">
+    <div class="modal-content has-background py-5 px-5">
       <h3 class="title mb-6">Upload</h3>
       <!-- isi dalam upload -->
       <div class="field">
@@ -234,8 +236,8 @@
           <div class="card-content">
             <div class="media">
               <div class="media-content">
-                <p class="title is-4">{{ data['title'] }}</p>
-                <p class="subtitle is-6">@{{ data['username'] }}</p>
+                <p class="title is-4" onclick="window.location.href = '/detail/{{ data['_id'] }}?from_page=/blog?page={{curr_page}}'">{{ data['title'] }}</p>
+                <p class="subtitle is-6" onclick="window.location.href = '/user/{{ data['username'] }}'">@{{ data['username'] }}</p>
               </div>
             </div>
           </div>
@@ -309,7 +311,7 @@
             <i class="fa-regular fa-heart"></i>
             {% endif %}
           </span>
-          <span class="icon ml-4" onclick="event.stopPropagation();window.location.href = '/detail/{{ data['_id'] }}'">
+          <span class="icon ml-4" onclick="event.stopPropagation();window.location.href = '/detail/{{ data['_id'] }}?from_page=/blog?page={{curr_page}}'">
             <i class="fa-solid fa-comment"></i>
           </span>
           {% if is_superadmin or data['username'] == current_username %}
@@ -342,6 +344,7 @@
       render_users_infos();
       sidebar_listener();
       file_upload_image_namer();
+      from_page_backtrack_listener();
     });
   </script>
 </body>
