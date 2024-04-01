@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Helios | About us</title>
+    <!-- Icon Tab -->
+    <link rel="icon" type="image/x-icon" href="../static/assets/icon.png">
     <!-- Custom css -->
     <link rel="stylesheet" href="../static/mycss.css">
     <!-- Bulma -->
@@ -69,8 +71,10 @@
                 <!-- search bar -->
                 <div class="mx-5 my-5">
                     <div class="search">
-                        <span class="search-icon material-symbols-outlined" onclick="search_images_redirect()">search</span>
-                        <input class="search-input" type="search" placeholder="Search" onkeydown="search_images_redirect()">
+                        <span class="search-icon material-symbols-outlined"
+                            onclick="search_images_redirect()">search</span>
+                        <input class="search-input" type="search" placeholder="Search"
+                            onkeydown="search_images_redirect()">
                     </div>
                 </div>
                 <div class="mx-5 my-5">
@@ -84,7 +88,7 @@
     <div class="overlay sidebar-listener"></div>
     <div class="sidebar">
         <div class="mx-5 my-4">
-            <figure class="profile-pic" id="sidebar-user-profile-picture">
+            <figure class="profile-pic" id="sidebar-user-profile-picture" onclick="window.location.href = '/user/{{ current_username }}'">
                 <img class="is-rounded" src="../static/defaults/48x48.png">
             </figure>
             <div class="has-text-white mt-4">
@@ -96,7 +100,7 @@
                     <p class="is-size-7 has-text-weight-light">About</p>
                     <div>
                         <p id="sidebar-user-about">...</p>
-                        <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon">
+                        <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon" onclick="window.location.href = '/user/{{ current_username }}#modal-edit-info'">
                     </div>
                 </div>
                 <!-- Max 30 character -->
@@ -104,7 +108,7 @@
                     <p class="is-size-7 has-text-weight-light">Gender</p>
                     <div>
                         <p id="sidebar-user-gender">N/A</p>
-                        <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon">
+                        <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon" onclick="window.location.href = '/user/{{ current_username }}#modal-edit-info'">
                     </div>
                 </div>
                 <hr class="separator">
@@ -134,6 +138,16 @@
                 </div>
             </div>
         </div>
+    </div>
+    <div class="my-4 mx-6">
+        <a onclick="GoBackRefresh()">
+            <span class="icon-text">
+                <span class="icon">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </span>
+                <span class="has-text-weight-bold">Go back</span>
+            </span>
+        </a>
     </div>
     <!-- abous -->
 

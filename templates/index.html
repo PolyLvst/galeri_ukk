@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Helios | Gallery</title>
+    <!-- Icon Tab -->
+    <link rel="icon" type="image/x-icon" href="../static/assets/icon.png">
     <!-- Custom css -->
     <link rel="stylesheet" href="../static/mycss.css" />
     <!-- Bulma -->
@@ -60,122 +62,104 @@
   <body>
     <!-- Navbar -->
     <nav class="navbar has-shadow" role="navigation">
-      <div class="navbar-brand">
-        <a class="navbar-item" href="/">
-          <h1 class="Logo px-4">HELIOS</h1>
-        </a>
-        <a
-          role="button"
-          class="navbar-burger mt-2 mr-3"
-          aria-label="menu"
-          aria-expanded="false"
-          data-target="navbar-div-menu"
-        >
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-        </a>
-      </div>
-      <div class="navbar-menu" id="navbar-div-menu">
-        <div class="navbar-start mx-4">
-          <a class="navbar-item has-text-weight-bold" href="/"> Home </a>
-          <a class="navbar-item" href="/about"> About us </a>
-          <a class="navbar-item" href="/blog"> Blog </a>
+        <div class="navbar-brand">
+            <a class="navbar-item" href="/">
+                <h1 class="Logo px-4">
+                    HELIOS
+                </h1>
+            </a>
+            <a role="button" class="navbar-burger mt-2 mr-3" aria-label="menu" aria-expanded="false"
+                data-target="navbar-div-menu">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </a>
         </div>
-        <div class="navbar-end">
-          <!-- search bar -->
-          <div class="mx-5 my-5">
-            <div class="search">
-              <span
-                class="search-icon material-symbols-outlined"
-                onclick="search_images()"
-                >search</span
-              >
-              <input
-                class="search-input"
-                type="search"
-                placeholder="Search"
-                onkeydown="search_images()"
-              />
+        <div class="navbar-menu" id="navbar-div-menu">
+            <div class="navbar-start mx-4">
+                <a class="navbar-item has-text-weight-bold" href="/">
+                    Home
+                </a>
+                <a class="navbar-item" href="/about">
+                    About us
+                </a>
+                <a class="navbar-item" href="/blog">
+                    Blog
+                </a>
             </div>
-          </div>
-          <div class="mx-5 my-5">
-            <figure
-              class="profile-pic sidebar-listener"
-              id="user-profile-picture"
-            >
-              <img class="is-rounded" src="../static/defaults/48x48.png" />
-            </figure>
-          </div>
+            <div class="navbar-end">
+                <!-- search bar -->
+                <div class="mx-5 my-5">
+                    <div class="search">
+                        <span class="search-icon material-symbols-outlined" onclick="search_images()"
+                            id="search-bar-icon-index">search</span>
+                        <input class="search-input" type="search" placeholder="Search" onkeydown="search_images()">
+                    </div>
+                </div>
+                <div class="mx-5 my-5">
+                    <figure class="profile-pic sidebar-listener" id="user-profile-picture">
+                        <img class="is-rounded" src="../static/defaults/48x48.png">
+                    </figure>
+                </div>
+            </div>
         </div>
-      </div>
     </nav>
     <div class="overlay sidebar-listener"></div>
     <div class="sidebar">
-      <div class="mx-5 my-4">
-        <figure class="profile-pic" id="sidebar-user-profile-picture">
-          <img class="is-rounded" src="../static/defaults/48x48.png" />
-        </figure>
-        <div class="has-text-white mt-4">
-          <div id="sidebar-username">
-            <p class="has-text-weight-bold">username</p>
-          </div>
-          <!-- Max 100 character -->
-          <div class="mt-4">
-            <p class="is-size-7 has-text-weight-light">About</p>
-            <div>
-              <p id="sidebar-user-about">...</p>
-              <img
-                width="17"
-                height="17"
-                src="../static/assets/edit-2.svg"
-                alt="Edit icon"
-              />
+        <div class="mx-5 my-4">
+            <figure class="profile-pic" id="sidebar-user-profile-picture"
+                onclick="window.location.href = '/user/{{ current_username }}'">
+                <img class="is-rounded" src="../static/defaults/48x48.png">
+            </figure>
+            <div class="has-text-white mt-4">
+                <div id="sidebar-username">
+                    <p class="has-text-weight-bold">username</p>
+                </div>
+                <!-- Max 100 character -->
+                <div class="mt-4">
+                    <p class="is-size-7 has-text-weight-light">About</p>
+                    <div>
+                        <p id="sidebar-user-about">...</p>
+                        <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon"
+                            onclick="window.location.href = '/user/{{ current_username }}#modal-edit-info'">
+                    </div>
+                </div>
+                <!-- Max 30 character -->
+                <div class="mt-4">
+                    <p class="is-size-7 has-text-weight-light">Gender</p>
+                    <div>
+                        <p id="sidebar-user-gender">N/A</p>
+                        <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon"
+                            onclick="window.location.href = '/user/{{ current_username }}#modal-edit-info'">
+                    </div>
+                </div>
+                <hr class="separator">
+                <div class="mt-4" onclick="window.location.href = '/bookmarks';">
+                    <span class="icon-text">
+                        <span class="icon">
+                            <i class="fa-solid fa-bookmark"></i>
+                        </span>
+                        <span>Bookmarks</span>
+                    </span>
+                </div>
+                <div class="mt-4">
+                    <span class="icon-text" onclick="window.location.href = '/my-gallery';">
+                        <span class="icon">
+                            <i class="fa-regular fa-images"></i>
+                        </span>
+                        <span>My Gallery</span>
+                    </span>
+                </div>
+                <div class="bottom-content" onclick="logout_account()">
+                    <span class="icon-text">
+                        <span class="icon">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </span>
+                        <span>Log Out</span>
+                    </span>
+                </div>
             </div>
-          </div>
-          <!-- Max 30 character -->
-          <div class="mt-4">
-            <p class="is-size-7 has-text-weight-light">Gender</p>
-            <div>
-              <p id="sidebar-user-gender">N/A</p>
-              <img
-                width="17"
-                height="17"
-                src="../static/assets/edit-2.svg"
-                alt="Edit icon"
-              />
-            </div>
-          </div>
-          <hr class="separator" />
-          <div class="mt-4" onclick="window.location.href = '/bookmarks';">
-            <span class="icon-text">
-              <span class="icon">
-                <i class="fa-solid fa-bookmark"></i>
-              </span>
-              <span>Bookmarks</span>
-            </span>
-          </div>
-          <div class="mt-4">
-            <span
-              class="icon-text"
-              onclick="window.location.href = '/my-gallery';"
-            >
-              <span class="icon">
-                <i class="fa-regular fa-images"></i>
-              </span>
-              <span>My Gallery</span>
-            </span>
-          </div>
-          <div class="bottom-content" onclick="logout_account()">
-            <span class="icon-text">
-              <span class="icon">
-                <i class="fa-solid fa-right-from-bracket"></i>
-              </span>
-              <span>Log Out</span>
-            </span>
-          </div>
         </div>
-      </div>
     </div>
     <div class="content">
       <div class="has-text-right mb-3 mt-3">
@@ -201,283 +185,183 @@
             </div>
           </div>
         <!-- upload -->
-        <button
-          class="button is-link is-outlined mx-5 modal-button"
-          id="upload"
-          data-target="modal-upload"
-        >
-          Upload
-        </button>
-      </div>
-      <div id="modal-upload" class="modal">
-        <div class="modal-background"></div>
-        <div class="modal-content has-background-white py-5 px-5">
-          <h3 class="title mb-6">Upload</h3>
-          <!-- isi dalam upload -->
-          <div class="field">
-            <div class="file is-normal has-name" id="file-upload-images-div">
-              <label class="file-label">
-                <input class="file-input" type="file" id="file-input-upload" />
-                <span class="file-cta">
-                  <span class="file-icon">
-                    <i class="fas fa-upload"></i>
-                  </span>
-                  <span class="file-label"> Upload Image </span>
-                </span>
-                <span class="file-name"></span>
-              </label>
-            </div>
-          </div>
-          <div class="field">
-            <label class="label">Judul</label>
-            <div class="control">
-              <input
-                class="input is-link"
-                type="text"
-                placeholder="Judul"
-                id="judul-upload"
-              />
-            </div>
-          </div>
-          <div class="field">
-            <label class="label">Deskripsi</label>
-            <div class="control">
-              <input
-                class="input is-link"
-                type="text"
-                placeholder="Deskripsi"
-                id="deskripsi-upload"
-              />
-            </div>
-          </div>
-          <div class="field">
-            <label class="label">Kategori</label>
-            <div class="control">
-              <div
-                class="columns is-mobile is-multiline"
-                id="kategori-picker-upload"
-              >
-                <div class="column is-narrow">
-                  <span
-                    class="tag tags-list-unique is-success"
-                    id="all-tags"
-                    onclick="toggleTags('all-tags','All');"
-                  >
-                    All
-                    <button
-                      class="delete is-small"
-                      id="delete-tags-kategori-All"
-                    ></button>
-                  </span>
+        <div class="has-text-right mb-3 mt-3">
+            <button class="button is-link is-outlined mx-5 modal-button" id="upload"
+                data-target="modal-upload">Upload</button>
+        </div>
+        <div id="modal-upload" class="modal">
+            <div class="modal-background"></div>
+            <div class="modal-content has-background py-5 px-5">
+                <h3 class="title mb-6">Upload</h3>
+                <!-- isi dalam upload -->
+                <div class="field">
+                    <div class="file is-normal has-name" id="file-upload-images-div">
+                        <label class="file-label">
+                            <input class="file-input" type="file" id="file-input-upload">
+                            <span class="file-cta">
+                                <span class="file-icon">
+                                    <i class="fas fa-upload"></i>
+                                </span>
+                                <span class="file-label">
+                                    Upload Image
+                                </span>
+                            </span>
+                            <span class="file-name"></span>
+                        </label>
+                    </div>
                 </div>
-                <div class="column is-narrow">
-                  <span
-                    class="tag tags-list-unique is-danger"
-                    id="teknologi-tags"
-                    onclick="toggleTags('teknologi-tags','Teknologi');"
-                  >
-                    Teknologi
-                  </span>
+                <div class="field">
+                    <label class="label">Judul</label>
+                    <div class="control">
+                        <input class="input is-link" type="text" placeholder="Judul" id="judul-upload">
+                    </div>
                 </div>
-                <div class="column is-narrow">
-                  <span
-                    class="tag tags-list-unique is-danger"
-                    id="hewan-tags"
-                    onclick="toggleTags('hewan-tags','Hewan');"
-                  >
-                    Hewan
-                  </span>
+                <div class="field">
+                    <label class="label">Deskripsi</label>
+                    <div class="control">
+                        <input class="input is-link" type="text" placeholder="Deskripsi" id="deskripsi-upload">
+                    </div>
                 </div>
-                <div class="column is-narrow">
-                  <span
-                    class="tag tags-list-unique is-danger"
-                    id="makanan-tags"
-                    onclick="toggleTags('makanan-tags','Makanan');"
-                  >
-                    Makanan
-                  </span>
+                <div class="field">
+                    <label class="label">Kategori</label>
+                    <div class="control">
+                        <div class="columns is-mobile is-multiline" id="kategori-picker-upload">
+                            <div class="column is-narrow">
+                                <span class="tag tags-list-unique is-success" id="all-tags"
+                                    onclick="toggleTags('all-tags','All');">
+                                    All
+                                    <button class="delete is-small" id="delete-tags-kategori-All"></button>
+                                </span>
+                            </div>
+                            <div class="column is-narrow">
+                                <span class="tag tags-list-unique is-danger" id="teknologi-tags"
+                                    onclick="toggleTags('teknologi-tags','Teknologi');">
+                                    Teknologi
+                                </span>
+                            </div>
+                            <div class="column is-narrow">
+                                <span class="tag tags-list-unique is-danger" id="hewan-tags"
+                                    onclick="toggleTags('hewan-tags','Hewan');">
+                                    Hewan
+                                </span>
+                            </div>
+                            <div class="column is-narrow">
+                                <span class="tag tags-list-unique is-danger" id="makanan-tags"
+                                    onclick="toggleTags('makanan-tags','Makanan');">
+                                    Makanan
+                                </span>
+                            </div>
+                            <div class="column is-narrow">
+                                <span class="tag tags-list-unique is-danger" id="alam-tags"
+                                    onclick="toggleTags('alam-tags','Alam');">
+                                    Alam
+                                </span>
+                            </div>
+                            <div class="column is-narrow">
+                                <span class="tag tags-list-unique is-danger" id="orang-tags"
+                                    onclick="toggleTags('orang-tags','Orang');">
+                                    Orang
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="column is-narrow">
-                  <span
-                    class="tag tags-list-unique is-danger"
-                    id="alam-tags"
-                    onclick="toggleTags('alam-tags','Alam');"
-                  >
-                    Alam
-                  </span>
-                </div>
-                <div class="column is-narrow">
-                  <span
-                    class="tag tags-list-unique is-danger"
-                    id="orang-tags"
-                    onclick="toggleTags('orang-tags','Orang');"
-                  >
-                    Orang
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          <div class="mt-6 has-text-centered" id="button-save-upload-image">
-            <button
-              class="button is-link is-outlined"
-              onclick="upload_button()"
-            >
-              Save
-            </button>
-          </div>
-        </div>
-        <button class="modal-close is-large" aria-label="close"></button>
-      </div>
-      <div class="container">
-        <div class="grid container-masonry" id="gallery">
-          {% for data in images %}
-          <!-- Gallery items will be dynamically added here -->
-          <div
-            class="card my-2 mx-2 modal-button grid-items-masonry"
-            data-target="modal-image-{{ data['_id']}}"
-          >
-            <div class="card-image">
-              <img
-                src="{{ data['image_thumbnail'] }}"
-                alt="Photos by {{ data['username'] }}"
-                style="width: 200px"
-                class="view-image"
-              />
+                <div class="mt-6 has-text-centered" id="button-save-upload-image">
+                    <button class="button is-link is-outlined" onclick="upload_button()">Save</button>
+                </div>
             </div>
-          </div>
-          {% endfor %}
+            <button class="modal-close is-large" aria-label="close"></button>
         </div>
-      </div>
-      <!-- Image modal-->
-      <div id="modals-image-fullscreen">
-        {% for data in images %}
-        <div
-          id="modal-image-{{ data['_id'] }}"
-          class="modal modal-fx-superScaled"
-        >
-          <div class="modal-background">
-            <div class="mx-4 column box bottom-content has-text-centered">
-              <span
-                class="icon"
-                id="bookmark-icon-modals-fullscreen-{{ data['_id'] }}"
-                onclick="toggleBookmark('{{ data['_id'] }}')"
-              >
-                {% if data['bookmark_by_me'] %}
-                <i class="fa-solid fa-bookmark has-text-link"></i>
-                {% else %}
-                <i class="fa-regular fa-bookmark"></i>
-                {% endif %}
-              </span>
-              <span
-                class="icon ml-4"
-                id="heart-icon-modals-fullscreen-{{ data['_id'] }}"
-                onclick="toggleLike('{{ data['_id'] }}')"
-              >
-                {% if data['like_by_me'] %}
-                <i class="fa-solid fa-heart has-text-danger"></i>
-                {% else %}
-                <i class="fa-regular fa-heart"></i>
-                {% endif %}
-              </span>
-              <span
-                class="icon ml-4"
-                onclick="event.stopPropagation();window.location.href = '/detail/{{ data['_id'] }}'"
-              >
-                <i class="fa-solid fa-comment"></i>
-              </span>
-              {% if is_superadmin or data['username'] == current_username %}
-              <span
-                class="icon ml-4"
-                id="delete-icon-modals-fullscreen-{{ data['_id'] }}"
-                onclick="deleteImage('{{ data['_id'] }}')"
-              >
-                <i class="fa-solid fa-trash"></i>
-              </span>
-              {% endif %}
+        <div class="container">
+            <div class="grid container-masonry" id="gallery">
+                {% for data in images %}
+                <!-- Gallery items will be dynamically added here -->
+                <div class="card my-2 mx-2 modal-button grid-items-masonry" data-target="modal-image-{{ data['_id']}}">
+                    <div class="card-image">
+                        <img src="{{ data['image_thumbnail'] }}" alt="Photos by {{ data['username'] }}"
+                            style="width: 200px;" class="view-image">
+                    </div>
+                </div>
+                {% endfor %}
             </div>
-          </div>
-          <div class="modal-content is-image">
-            <!-- src="{{ data['image_thumbnail'] }}" -->
-            <img
-              loading="lazy"
-              class="lazy-load"
-              src="{{ data['image'] }}"
-              alt="Photos by {{ data['username'] }}"
-            />
-          </div>
-          <button class="modal-close is-large" aria-label="close"></button>
         </div>
-        {% endfor %}
-      </div>
+        <!-- Image modal-->
+        <div id="modals-image-fullscreen">
+            {% for data in images %}
+            <div id="modal-image-{{ data['_id'] }}" class="modal modal-fx-superScaled">
+                <div class="modal-background">
+                    <div id="dropup-area-collection"></div>
+                    <div class="mx-4 column box bottom-content has-text-centered">
+                        <span class="icon" id="bookmark-icon-modals-fullscreen-{{ data['_id'] }}"
+                            onclick="toggleBookmark('{{ data['_id'] }}')">
+                            {% if data['bookmark_by_me'] %}
+                            <i class="fa-solid fa-bookmark has-text-link"></i>
+                            {% else %}
+                            <i class="fa-regular fa-bookmark"></i>
+                            {% endif %}
+                        </span>
+                        <span class="icon ml-4" id="heart-icon-modals-fullscreen-{{ data['_id'] }}"
+                            onclick="toggleLike('{{ data['_id'] }}')">
+                            {% if data['like_by_me'] %}
+                            <i class="fa-solid fa-heart has-text-danger"></i>
+                            {% else %}
+                            <i class="fa-regular fa-heart"></i>
+                            {% endif %}
+                        </span>
+                        <span class="icon ml-4"
+                            onclick="event.stopPropagation();window.location.href = '/detail/{{ data['_id'] }}?from_page=/?page={{curr_page}}{{args_nav}}'">
+                            <i class="fa-solid fa-comment"></i>
+                        </span>
+                        {% if is_superadmin or data['username'] == current_username %}
+                        <span class="icon ml-4" id="delete-icon-modals-fullscreen-{{ data['_id'] }}"
+                            onclick="deleteImage('{{ data['_id'] }}')">
+                            <i class="fa-solid fa-trash"></i>
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="modal-content is-image">
+                    <!-- src="{{ data['image_thumbnail'] }}" -->
+                    <img loading="lazy" class="lazy-load" src="{{ data['image'] }}"
+                        alt="Photos by {{ data['username'] }}">
+                </div>
+                <button class="modal-close is-large" aria-label="close"></button>
+            </div>
+            {% endfor %}
+        </div>
     </div>
     <div class="container my-3">
-      <!-- next slide button -->
-      <nav
-        class="pagination is-centered"
-        role="navigation"
-        aria-label="pagination"
-        id="pagination-parent-nav"
-      >
-        {% if prev_page %}
-        <a
-          href="/?query={{ query }}&page={{ prev_page }}&collection={{ collection_id }}"
-          class="pagination-previous"
-          >Previous</a
-        >
-        {% else %}
-        <a class="pagination-previous is-disabled">Previous</a>
-        {% endif %} {% if next_page %}
-        <a
-          href="/?query={{ query }}&page={{ next_page }}&collection={{ collection_id }}"
-          class="pagination-next"
-          >Next page</a
-        >
-        {% else %}
-        <a class="pagination-next is-disabled">Next page</a>
-        {% endif %}
-        <ul class="pagination-list">
-          <li>
-            <a
-              href="/?query={{ query }}&page=1&collection={{ collection_id }}"
-              class="pagination-link"
-              >1</a
-            >
-          </li>
+        <!-- next slide button -->
+        <nav class="pagination is-centered" role="navigation" aria-label="pagination" id="pagination-parent-nav">
+            {% if prev_page %}
+            <a href="/?page={{ prev_page }}{{ args_nav }}" class="pagination-previous">Previous</a>
+            {% else %}
+            <a class="pagination-previous is-disabled">Previous</a>
+            {% endif %}
+            {% if next_page %}
+            <a href="/?page={{ next_page }}{{ args_nav }}" class="pagination-next">Next page</a>
+            {% else %}
+            <a class="pagination-next is-disabled">Next page</a>
+            {% endif %}
+            <ul class="pagination-list">
+                <li><a href="/?page=1{{ args_nav }}" class="pagination-link">1</a>
+                </li>
 
           <li><span class="pagination-ellipsis">&hellip;</span></li>
 
-          {% if prev_page %}
-          <li>
-            <a
-              href="/?query={{ query }}&page={{ prev_page }}&collection={{ collection_id }}"
-              class="pagination-link"
-              >{{ prev_page }}</a
-            >
-          </li>
-          {% endif %}
-          <li><a class="pagination-link is-current">{{ curr_page }}</a></li>
-          {% if next_page %}
-          <li>
-            <a
-              href="/?query={{ query }}&page={{ next_page }}&collection={{ collection_id }}"
-              class="pagination-link"
-              >{{ next_page }}</a
-            >
-          </li>
-          {% endif %}
+                {% if prev_page %}
+                <li><a href="/?page={{ prev_page }}{{ args_nav }}" class="pagination-link">{{ prev_page }}</a></li>
+                {% endif %}
+                <li><a class="pagination-link is-current">{{ curr_page }}</a></li>
+                {% if next_page %}
+                <li><a href="/?page={{ next_page }}{{ args_nav }}" class="pagination-link">{{ next_page }}</a></li>
+                {% endif %}
 
-          <li><span class="pagination-ellipsis">&hellip;</span></li>
-          <li>
-            <a
-              href="/?query={{ query }}&page={{ end_page }}&collection={{ collection_id }}"
-              class="pagination-link"
-              >{{ end_page }}</a
-            >
-          </li>
-        </ul>
-      </nav>
+                <li><span class="pagination-ellipsis">&hellip;</span></li>
+                <li><a href="/?page={{ end_page }}{{ args_nav }}" class="pagination-link">{{ end_page }}</a></li>
+            </ul>
+        </nav>
     </div>
     <!-- Bulma modal js -->
     <script src="../static/modal-fx.min.js"></script>
@@ -487,16 +371,17 @@
         const sidebar = $("#sidebar");
         const sidebarToggle = $("#sidebarToggle");
 
-        sidebarToggle.click(function () {
-          sidebar.toggleClass("is-active");
+            sidebarToggle.click(function () {
+                sidebar.toggleClass('is-active');
+            });
+            // Placeholder images untuk bikin rame doang
+            // load_images();
+            layout_masonry();
+            render_users_infos();
+            sidebar_listener();
+            file_upload_image_namer();
+            from_page_backtrack_listener();
         });
-        // Placeholder images untuk bikin rame doang
-        // load_images();
-        layout_masonry();
-        render_users_infos();
-        sidebar_listener();
-        file_upload_image_namer();
-      });
     </script>
   </body>
 </html>
