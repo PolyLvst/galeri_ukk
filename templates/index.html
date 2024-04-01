@@ -73,7 +73,8 @@
                 <!-- search bar -->
                 <div class="mx-5 my-5">
                     <div class="search">
-                        <span class="search-icon material-symbols-outlined" onclick="search_images()" id="search-bar-icon-index">search</span>
+                        <span class="search-icon material-symbols-outlined" onclick="search_images()"
+                            id="search-bar-icon-index">search</span>
                         <input class="search-input" type="search" placeholder="Search" onkeydown="search_images()">
                     </div>
                 </div>
@@ -88,7 +89,8 @@
     <div class="overlay sidebar-listener"></div>
     <div class="sidebar">
         <div class="mx-5 my-4">
-            <figure class="profile-pic" id="sidebar-user-profile-picture" onclick="window.location.href = '/user/{{ current_username }}'">
+            <figure class="profile-pic" id="sidebar-user-profile-picture"
+                onclick="window.location.href = '/user/{{ current_username }}'">
                 <img class="is-rounded" src="../static/defaults/48x48.png">
             </figure>
             <div class="has-text-white mt-4">
@@ -100,7 +102,8 @@
                     <p class="is-size-7 has-text-weight-light">About</p>
                     <div>
                         <p id="sidebar-user-about">...</p>
-                        <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon" onclick="window.location.href = '/user/{{ current_username }}#modal-edit-info'">
+                        <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon"
+                            onclick="window.location.href = '/user/{{ current_username }}#modal-edit-info'">
                     </div>
                 </div>
                 <!-- Max 30 character -->
@@ -108,7 +111,8 @@
                     <p class="is-size-7 has-text-weight-light">Gender</p>
                     <div>
                         <p id="sidebar-user-gender">N/A</p>
-                        <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon" onclick="window.location.href = '/user/{{ current_username }}#modal-edit-info'">
+                        <img width="17" height="17" src="../static/assets/edit-2.svg" alt="Edit icon"
+                            onclick="window.location.href = '/user/{{ current_username }}#modal-edit-info'">
                     </div>
                 </div>
                 <hr class="separator">
@@ -247,6 +251,7 @@
             {% for data in images %}
             <div id="modal-image-{{ data['_id'] }}" class="modal modal-fx-superScaled">
                 <div class="modal-background">
+                    <div id="dropup-area-collection"></div>
                     <div class="mx-4 column box bottom-content has-text-centered">
                         <span class="icon" id="bookmark-icon-modals-fullscreen-{{ data['_id'] }}"
                             onclick="toggleBookmark('{{ data['_id'] }}')">
@@ -290,14 +295,12 @@
         <!-- next slide button -->
         <nav class="pagination is-centered" role="navigation" aria-label="pagination" id="pagination-parent-nav">
             {% if prev_page %}
-            <a href="/?page={{ prev_page }}{{ args_nav }}"
-                class="pagination-previous">Previous</a>
+            <a href="/?page={{ prev_page }}{{ args_nav }}" class="pagination-previous">Previous</a>
             {% else %}
             <a class="pagination-previous is-disabled">Previous</a>
             {% endif %}
             {% if next_page %}
-            <a href="/?page={{ next_page }}{{ args_nav }}"
-                class="pagination-next">Next page</a>
+            <a href="/?page={{ next_page }}{{ args_nav }}" class="pagination-next">Next page</a>
             {% else %}
             <a class="pagination-next is-disabled">Next page</a>
             {% endif %}
@@ -308,18 +311,15 @@
                 <li><span class="pagination-ellipsis">&hellip;</span></li>
 
                 {% if prev_page %}
-                <li><a href="/?page={{ prev_page }}{{ args_nav }}"
-                        class="pagination-link">{{ prev_page }}</a></li>
+                <li><a href="/?page={{ prev_page }}{{ args_nav }}" class="pagination-link">{{ prev_page }}</a></li>
                 {% endif %}
                 <li><a class="pagination-link is-current">{{ curr_page }}</a></li>
                 {% if next_page %}
-                <li><a href="/?page={{ next_page }}{{ args_nav }}"
-                        class="pagination-link">{{ next_page }}</a></li>
+                <li><a href="/?page={{ next_page }}{{ args_nav }}" class="pagination-link">{{ next_page }}</a></li>
                 {% endif %}
 
                 <li><span class="pagination-ellipsis">&hellip;</span></li>
-                <li><a href="/?page={{ end_page }}{{ args_nav }}"
-                        class="pagination-link">{{ end_page }}</a></li>
+                <li><a href="/?page={{ end_page }}{{ args_nav }}" class="pagination-link">{{ end_page }}</a></li>
             </ul>
         </nav>
     </div>
