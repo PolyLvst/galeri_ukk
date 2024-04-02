@@ -64,30 +64,38 @@
             <div class="columns is-flex is-flex-direction-column box" id="login-box">
                 <h3 class="has-text-weight-bold has-text-link">LOGIN</h3>
                 <div class="column">
-                    <label for="email">User Name </label>
+                    <label for="email">Input Your User Name</label>
                     <input class="input" type="text" placeholder="Username" id="username"
                         onkeydown="enter_listener_login()">
                 </div>
                 <div class="column">
-                    <label for="Name">Password</label>
+                    <label for="email">New Password</label>
                     <div class="password-container">
                         <input id="password" class="input" type="password" placeholder="Password"
-                            onkeydown="enter_listener_login()">
+                            onkeydown="enter_listener()">
                         <span class="toggle-password" onclick="togglePassword()">
                             <i id="eye-icon" class="fa fa-eye-slash" aria-hidden="true"></i>
                         </span>
                     </div>
-                    <p id="anjim" class="has-text-danger"></p>
                 </div>
                 <div class="column">
-                    <button id="loginBtn" class="button is-link is-light is-fullwidth" type="submit"
-                        href="#">Login</button>
+                    <label for="Name">Input Password Again</label>
+                    <div class="password-container">
+                        <input id="verify_password" class="input" type="password" placeholder="Password"
+                            onkeydown="enter_listener()">
+                        <span class="toggle-password" onclick="toggleVerifyPassword()">
+                            <i id="eye-icon-verify" class="fa fa-eye-slash" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <p id="password-same" class="has-text-danger"></p>
                 </div>
-                <div class="field is-grouped">
-                    <p class="is-size-7"> Don't have an account? <a href="/daftar" class="has-text-link">Sign
-                            up</a>
+                <div class="column">
+                    <button id="continueBtn" class="button is-link is-light is-fullwidth" type="submit"
+                        href="#">Continue</button>
+                </div>
+                <div class="has-text-centered">
+                    <p class="is-size-7"> Change your mind? <a href="/login" class="has-text-link">Login</a>
                     </p>
-                    <a href="/forgotpw" class="has-text-link is-size-7">Forgot password?</a>
                 </div>
             </div>
         </div>
@@ -95,8 +103,8 @@
     </div>
     <script>
         $(document).ready(function () {
-            login_button_listener();
-            togglePassword();
+            continue_button_listener_forgot()
+            togglePassword()
         });
     </script>
 </body>
