@@ -15,6 +15,7 @@ import hashlib
 import secrets
 import jwt
 import os
+import json
 
 load_dotenv(override=True)
 
@@ -26,9 +27,11 @@ TOKEN = 'token'
 
 IMAGES_THUMBNAIL_SIZE = (300,300)
 image_maxsize = 1 #Mb
+image_upload_maxsize = 15 * 1024 * 1024 # 15 Mb
 
-# using an access token
+# Storage Url
 StorageURL = os.environ.get("StorageURL")# "http://localhost:5500/"
+MaxStorageCapacity = 170 # Mb (leave 29 Mb for server data, total available 199 Mb)
 # Default foto profil untuk user
 default_profile_pic = "../static/defaults/default-profile-pic.png"
 
@@ -71,6 +74,29 @@ def limit_image_size(image_path, max_size_mb=1):
     # Save foto
     resized_image.save(image_path)
     return True
+
+# Check if storage is available
+def is_available_storage():
+    # Check if the storage is full
+    check = requests.get(url=StorageURL)
+    # Parse
+    data = json.loads(check.text)
+    # Extract the disk usage value
+    usage_str = data["used"]  # "91M\t/app\n"
+    # Remove any non-numeric characters
+    usage_str_clean = ''.join(filter(str.isdigit, usage_str))  # "91"
+    print("Available storage : "+usage_str_clean+" Mb")
+    if int(usage_str_clean) > MaxStorageCapacity:
+        print("## STORAGE IS FULL ##")
+        return False
+    return True
+
+def is_bigger_than_upload_maxsize(req):
+    if req.content_length is not None and req.content_length > image_upload_maxsize:
+        # Image is bigger than upload maxsize
+        return True
+    # Image is smaller than upload maxsize
+    return False
 
 # Upload file ke storage atau update
 def upload_file_to_storage(file_path_static:str,content:str,token:str):
@@ -1040,6 +1066,13 @@ def create_images():
         file_path = f"photos/{unique_format}"
         file_save_path = f"./static/temp/{file_path}"
 
+        # is_full_capacity
+        if not is_available_storage():
+            return jsonify({"msg":"Storage is full"}), 507 # Insufficient Storage
+        
+        if is_bigger_than_upload_maxsize(request) :  # Max size reached
+            return jsonify({"msg": "File size exceeds upload limit"}), 400
+
         # Simpan file ke folder temp
         file.save(file_save_path)
         limit_image_size(file_save_path,image_maxsize)
@@ -1151,6 +1184,13 @@ def update_user_me():
         
         if not check_ext(extension):
             return jsonify({"msg":"Extension not allowed"}),406 # Not acceptable
+        
+        # is_full_capacity
+        if not is_available_storage():
+            return jsonify({"msg":"Storage is full"}), 507 # Insufficient Storage
+        
+        if is_bigger_than_upload_maxsize(request) :  # Max size reached
+            return jsonify({"msg": "File size exceeds upload limit"}), 400
         
         # Get current user profile pic
         current_data = table_users.find_one({"username":username},{"_id":False})

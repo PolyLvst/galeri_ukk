@@ -440,12 +440,13 @@ function upload_button() {
         processData: false,
         contentType: false,
         data: form_data,
-        success: function (response, textStatus, xhr) {
-            if (xhr.status == 200) {
-                window.location.reload();
-            } else {
-                alert('Something went wrong ' + response["msg"]);
-            }
+        success: function (response) {
+            window.location.reload();
+        },
+        error: function (xhr, status, error) {
+            var errorMessage = xhr.responseJSON.msg;
+            alert(errorMessage);
+            buttonSaveUpload.empty();
         }
     })
 }
@@ -475,6 +476,11 @@ function save_user_info_button() {
             } else {
                 alert('Something went wrong ' + response["msg"]);
             }
+        },
+        error: function (xhr, status, error) {
+            var errorMessage = xhr.responseJSON.msg;
+            alert(errorMessage);
+            buttonSaveUpload.empty();
         }
     })
 }
