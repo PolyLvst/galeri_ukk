@@ -237,7 +237,7 @@
             <div class="grid container-masonry" id="gallery">
                 {% for data in images %}
                 <!-- Gallery items will be dynamically added here -->
-                <div class="card my-2 mx-2 modal-button grid-items-masonry" data-target="modal-image-{{ data['_id']}}">
+                <div class="card my-2 mx-2 modal-button grid-items-masonry" data-target="modal-image-{{ data['_id']}}" onclick="resetChangeCollection()">
                     <div class="card-image">
                         <img src="{{ data['image_thumbnail'] }}" alt="Photos by {{ data['username'] }}"
                             style="width: 200px;" class="view-image">
@@ -251,7 +251,9 @@
             {% for data in images %}
             <div id="modal-image-{{ data['_id'] }}" class="modal modal-fx-superScaled">
                 <div class="modal-background">
-                    <div id="dropup-area-collection"></div>
+                    <div id="dropup-area-collection">
+                        <!-- Dropup message change collection -->
+                    </div>
                     <div class="mx-4 column box bottom-content has-text-centered">
                         <span class="icon" id="bookmark-icon-modals-fullscreen-{{ data['_id'] }}"
                             onclick="toggleBookmark('{{ data['_id'] }}')">

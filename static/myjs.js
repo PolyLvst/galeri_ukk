@@ -572,8 +572,10 @@ function toggleBookmark(id) {
         success: function (response) {
             bookmarkIcon.empty();
             if (response["status"] == "created") {
+                messageChangeCollection(id);
                 bookmarkIcon.append(`<i class="fa-solid fa-bookmark has-text-link"></i>`);
             } else {
+                // resetChangeCollection(); Beri waktu user agar bisa merubah pikiran
                 bookmarkIcon.append(`<i class="fa-regular fa-bookmark"></i>`);
             }
         }
@@ -707,4 +709,134 @@ function deleteCollection(collection_id) {
         }
     })
 
+}
+
+// Bookmark popup collection chooser
+var popupTimer;
+var countdownInterval;
+
+function boxDropupCollectionListener() {
+    event.stopPropagation();
+    const messageBox = $('div#dropup-area-collection');
+    const boxDropup = $('div#box-dropup-collection');
+    var timerElement = $('span#countdown-dropup');
+    if (boxDropup.hasClass('is-active')) {
+        showTimeCountdown();
+        popupTimer = setTimeout(function () {
+            messageBox.empty();
+        }, 5000); // 5 Detik
+        boxDropup.removeClass('is-active');
+    } else {
+        clearInterval(countdownInterval);
+        timerElement.empty();
+        clearTimeout(popupTimer);
+        boxDropup.addClass('is-active');
+    }
+}
+function showTimeCountdown() {
+    // Set the target time (in milliseconds)
+    var targetTime = Date.now() + 5000; // 5 seconds from now
+    var timerElement = $('span#countdown-dropup');
+
+    // Update the countdown every second
+    countdownInterval = setInterval(function () {
+        // Calculate the remaining time
+        var currentTime = Date.now();
+        var remainingTime = targetTime - currentTime;
+
+        // Check if the countdown is finished
+        if (remainingTime <= 0) {
+            clearInterval(countdownInterval); // Stop the countdown
+            timerElement.empty();
+            return;
+        }
+
+        // Format the remaining time (e.g., MM:SS)
+        // var minutes = Math.floor(remainingTime / 60000);
+        var seconds = Math.ceil((remainingTime % 60000) / 1000);
+        // var formattedTime = minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
+        var formattedTime = seconds.toString();
+
+        // Update the timer element with the formatted time
+        timerElement.text(formattedTime);
+    }, 1000); // Update every second
+}
+function resetChangeCollection() {
+    // Reset for new post opened
+    const messageBox = $('div#dropup-area-collection');
+    messageBox.empty();
+    var timerElement = $('span#countdown-dropup');
+    clearInterval(countdownInterval);
+    timerElement.empty();
+    clearTimeout(popupTimer);
+}
+function messageChangeCollection() {
+    const messageBox = $('div#dropup-area-collection');
+    // Reset for new post opened
+    resetChangeCollection();
+    $.ajax({
+        url: "/api/collections",
+        type: "GET",
+        data: {},
+        success: function (response) {
+            let data = response["data"];
+            let collection_choosed = response["collection_choosed"];
+            let collections_html = `
+            <div class="bottom-content-notification">
+                <!--  add is-hoverable class if you want some hover action -->
+                <div class="box dropdown has-background-success is-right is-up has-text-black py-3"
+                    id="box-dropup-collection" onclick="event.stopPropagation()">
+                    <div class="dropdown-trigger" onclick="boxDropupCollectionListener()">
+                        <span class="icon-text">
+                            <span id="countdown-dropup"></span>
+                            <span class="icon">
+                                <i class="fa-solid fa-bookmark"></i>
+                            </span>
+                            <span>${collection_choosed}</span>
+                            <span class="icon is-small mt-1">
+                                <i class="fas fa-angle-up" aria-hidden="true"></i>
+                            </span>
+                        </span>
+                    </div>
+                    <div class="dropdown-menu mt-1" id="dropdown-menu4" role="menu">
+                        <div class="dropdown-content">
+                            <div class="dropdown-item">
+            `;
+            for (collection in data){
+                collections_html+=`
+                <span class="icon-text">
+                `;
+                if (collection_choosed == data[collection]['collection_name']){
+                    collections_html+=`
+                    <span class="icon has-text-success">
+                        <i class="fa-solid fa-square-check"></i>
+                    </span>
+                    <span>${data[collection]['collection_name']}</span>
+                </span>
+                </br>`;
+                } else {
+                    collections_html+=`
+                    <span class="icon has-text-gray" onclick="changeBookmarkCollection('${data[collection]['_id']}')" id="icon-box-${data[collection]['_id']}">
+                        <i class="fa-regular fa-square"></i>
+                    </span>
+                    <span onclick="changeBookmarkCollection('${data[collection]['_id']}')">${data[collection]['collection_name']}</span>
+                </span>
+                </br>`;
+                }   
+            }
+            collections_html+=`
+                                <a href="/bookmarks">...</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `;
+            messageBox.append(collections_html);
+            showTimeCountdown();
+            popupTimer = setTimeout(function () {
+                messageBox.empty();
+            }, 5000);
+        }
+    })
 }
