@@ -251,6 +251,13 @@
                   <br />
                   <small>{{ comment['date'] }}</small>
                 </p>
+                <div class="user-comment">
+                  <!-- Button untuk menyalin komentar -->
+                  <button class="button is-small is-primary copy-button" onclick="copyComment(this)"
+                    data-comment="{{ comment['comment'] }}">Salin Komentar</button>
+                  <!-- Pesan pop-up untuk menunjukkan bahwa komentar telah disalin -->
+                  <div class="copied-message" style="display: none;">Komentar telah disalin</div>
+                </div>
               </div>
             </div>
           </article>
