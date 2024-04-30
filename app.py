@@ -253,6 +253,7 @@ def home():
     items_per_page_home = 20
 
     page = request.args.get('page', default=1, type=int)
+    sortmode = request.args.get('sort', default=-1, type=int)
     per_page = request.args.get('per_page', default=items_per_page_home, type=int) # Number of items per page
     query = request.args.get('query', '')
     collection = request.args.get('collection', '')
@@ -287,7 +288,7 @@ def home():
         skip,prev_page,next_page,end_page = get_pagination_count(items_per_page=per_page,page=page,total_items=total_items)
 
         # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
-        photos = list(table_photos.find({}).sort("_id",-1).skip(skip=skip).limit(limit=per_page))        
+        photos = list(table_photos.find({}).sort("_id",sortmode).skip(skip=skip).limit(limit=per_page))
     photos = images_social(posts=photos,username=username)
     idx = 0
     for doc in photos:
@@ -437,6 +438,37 @@ def bookmarks():
     bookmarks = list(table_bookmarks.find({"username":username},{"_id":False, "bookmarks": {"$slice": bookmarks_preview_amount}}).sort("_id",-1).limit(limit=bookmarks_collection_amount))
     return jsonify({"data":bookmarks})
     # return render_template('bookmarks.html')
+
+@app.get("/api/collections")
+def get_my_collections():
+    # Ambil cookie
+    token_receive = request.cookies.get(TOKEN)
+    try:
+        # Buka konten cookie
+        payload = jwt.decode(token_receive,SECRET_KEY,algorithms=['HS256'])
+        username = payload["username"]
+        # Payload terverifikasi
+        pass
+    except jwt.ExpiredSignatureError:
+        # Sesinya sudah lewat dari 24 Jam
+        msg = 'Your session has expired'
+        return redirect(url_for('login_fn',msg=msg))
+    except jwt.exceptions.DecodeError:
+        # Tidak ada token
+        msg = 'Something wrong happens'
+        return redirect(url_for('login_fn',msg=msg))
+    # Jika payload terverifikasi maka kode dibawah akan di execute
+    max_shown_collections = 8
+    # Cari user
+    user = table_users.find_one({'username':username})
+    # Cari koleksi id di user choose collection
+    collection_choosed = user.get("choose_collection")
+    collections = list(table_saved_collection.find({"username":username}).limit(max_shown_collections))
+    idx = 0
+    for doc in collections:
+        collections[idx]["_id"] = str(doc["_id"])
+        idx += 1
+    return jsonify({"data":collections,"collection_choosed":collection_choosed})
 
 @app.post("/api/collection/create")
 def create_collection():

@@ -121,6 +121,18 @@
     bottom: 20px;
 }
 
+.bottom-content-notification {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    z-index: 999;
+}
+
+#box-dropup-collection {
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
 .profile-pic {
     width: 48px;
     height: 48px;
@@ -134,3 +146,11 @@
     height: 100%;
 }
 
+.dropdown-menu {
+    display: none; /* Awalnya dropdown tidak ditampilkan */
+  }
+  
+  .dropdown-menu.show {
+    display: block; /* Dropdown akan ditampilkan ketika kelas 'show' ditambahkan */
+  }
+  
