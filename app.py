@@ -109,7 +109,7 @@ def upload_file_to_storage(file_path_static:str,content:str,token:str):
         cookies={"token": token}
     )
     if response.status_code != 200:
-        print(f"Something went wrong : {response.status_code} | {response.text} | Cookie {token}")
+        print("Something went wrong : "+response.status_code+" | "+response.text+" | Cookie "+token)
         raise Exception
 
 # Delete file dari storage
@@ -122,7 +122,7 @@ def delete_file_from_storage(file_path_repo:str,token:str):
         cookies={"token": token}
     )
     if response.status_code != 200:
-        print(f"Something went wrong : {response.status_code} | {response.text} | Cookie {token}")
+        print("Something went wrong : "+response.status_code+" | "+response.text+" | Cookie "+token)
         raise Exception
 
 # Generate thumbnail
@@ -134,7 +134,7 @@ def generate_thumbnail(input_image_path, output_thumbnail_path, thumbnail_size=(
         image.thumbnail(thumbnail_size)
         # Save the thumbnail to the output path
         image.save(output_thumbnail_path)
-        print(f"Thumbnail generated and saved to '{output_thumbnail_path}'")
+        print("Thumbnail generated and saved to "+output_thumbnail_path)
     except Exception as e:
         print("Error generating thumbnail:", e)
 
@@ -174,10 +174,10 @@ def check_superadmin():
             "is_superadmin": True,
         }
         table_users.insert_one(doc)
-        print(f"# ------------------ #")
-        print(f"# Generated superadmin")
-        print(f"# User : helios-ruler")
-        print(f"# Password : {pw}")
+        print("# ------------------ #")
+        print("# Generated superadmin")
+        print("# User : helios-ruler")
+        print("# Password : "+pw)
 
 def get_pagination_count(items_per_page=20,page=1,total_items=1):
     # total_items = table_photos.count_documents({"username":username})  # Total number of items in the collection
@@ -287,7 +287,7 @@ def home():
 
     if query != '':
         # Untuk tombol navigasi bawah
-        args_nav = f'{args_nav}query={query}'
+        args_nav = args_nav+"query="+query
         results = search_images_query(query=query)
         total_items = len(results)  # Total number of items in the collection
         
@@ -298,7 +298,7 @@ def home():
         photos = results[skip:limit]
     elif collection != '':
         # Untuk tombol navigasi bawah
-        args_nav = f'{args_nav}collection={collection}'
+        args_nav = args_nav+"collection="+collection
         bookmarks_list = list(table_bookmarks.find({"collection_id":collection}).sort("_id",-1))
         total_items = len(bookmarks_list)
         skip,prev_page,next_page,end_page = get_pagination_count(items_per_page=per_page,page=page,total_items=total_items)
@@ -756,7 +756,7 @@ def search():
     per_page = request.args.get('per_page', default=items_per_page, type=int) # Number of items per page
     args_nav = "%26" # &
     # Untuk tombol navigasi bawah
-    args_nav = f'{args_nav}query={query}'
+    args_nav = args_nav+"query="+query
 
     results = search_images_query(query=query)
     
@@ -1062,9 +1062,9 @@ def create_images():
         extension = os.path.splitext(filename)[-1].replace('.','')
         if not check_ext(extension):
             return jsonify({"msg":"Extension not allowed"}),406 # Not acceptable
-        unique_format = f"{username}-{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}.{extension}"
-        file_path = f"photos/{unique_format}"
-        file_save_path = f"./static/temp/{file_path}"
+        unique_format = username+"-"+datetime.now().strftime('%d-%m-%Y_%H-%M-%S')+"."+extension
+        file_path = "photos/"+unique_format
+        file_save_path = "./static/temp/"+file_path
 
         # is_full_capacity
         if not is_available_storage():
@@ -1078,9 +1078,9 @@ def create_images():
         limit_image_size(file_save_path,image_maxsize)
 
         # Thumbnail
-        thumbnail_unique_format = f"thumbnail_{unique_format}"
-        thumbnail_path = f"photos/{thumbnail_unique_format}"
-        file_save_path_thumbnail = f"./static/temp/{thumbnail_path}"
+        thumbnail_unique_format = "thumbnail_"+unique_format
+        thumbnail_path = "photos/"+thumbnail_unique_format
+        file_save_path_thumbnail = "./static/temp/"+thumbnail_path
         generate_thumbnail(input_image_path=file_save_path,output_thumbnail_path=file_save_path_thumbnail,thumbnail_size=IMAGES_THUMBNAIL_SIZE)
         
         # Upload ke storage
@@ -1196,9 +1196,9 @@ def update_user_me():
         current_data = table_users.find_one({"username":username},{"_id":False})
         current_data_profile_pic = current_data.get("profile_pic_repo")
         
-        unique_format = f"{username}-{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}.{extension}"
-        file_path = f"profile_pics/mini_{unique_format}"
-        file_save_path = f"./static/temp/{file_path}"
+        unique_format = username+"-"+datetime.now().strftime('%d-%m-%Y_%H-%M-%S')+"."+extension
+        file_path = "profile_pics/mini_"+unique_format
+        file_save_path = "./static/temp/"+file_path
         # Simpan file ke folder temp
         file.save(file_save_path)
 
