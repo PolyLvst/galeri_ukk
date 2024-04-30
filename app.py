@@ -1202,6 +1202,10 @@ def login_fn():
 def daftar_fn():
     return render_template("daftar.html")
 
+@app.get("/forgotpw")
+def forgotpw_fn():
+    return render_template("lupapw.html")
+
 # Endpoint registrasi
 @app.post('/api/sign_up')
 def sign_up():
@@ -1282,6 +1286,20 @@ def check_username():
         return jsonify({'available': False}), 200  # Username is not available
     
     return jsonify({'available': True}), 200  # Username is available
+
+@app.post('/api/forgotpw')
+def forgot_password():
+    username_receive = request.form.get('username_give')
+    password_receive = request.form.get('password_give')
+
+    user_from_db = table_users.find_one({"username":username_receive})
+    salted_password = hash_salt_password(password_receive)
+
+    doc={
+        "password": salted_password
+    }
+    table_users.update_one(filter={"username":username_receive},update={"$set":doc})
+    return jsonify({"msg":"Password changed"})
 
 if __name__ == "__main__":
     check_superadmin()

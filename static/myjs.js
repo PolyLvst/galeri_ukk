@@ -146,7 +146,7 @@ function listen_continue() {
         $("#password-checker").text('Please fill the password field');
         return;
     }
-
+    $("#password-checker").empty()
     if (verify_password === "") {
         $("#password-same").text('Please verify your password');
         return;
@@ -201,7 +201,13 @@ function listen_login_continue() {
         },
         error: function (xhr, status, error) {
             // Jika login gagal, tampilkan pesan error
-            alert(status, error);
+            console.log(error)
+            console.log(status)
+            console.log(xhr)
+            if (error == 'NOT FOUND') {
+                $("#anjim").text('Please check your username or password');
+                return;
+            }
         }
     });
 }
@@ -210,6 +216,13 @@ function continue_button_listener() {
         listen_continue()
     });
 }
+
+function continue_button_listener_forgot() {
+    $("#continueBtn").click(function (event) {
+        listen_continue_forgot()
+    });
+}
+
 function enter_listener() {
     if (event.key === 'Enter') {
         listen_continue()
@@ -224,6 +237,7 @@ function login_button_listener() {
 }
 function enter_listener_login() {
     if (event.key === 'Enter') {
+        // console.log("titit")
         listen_login_continue()
     } else {
         return;
@@ -746,7 +760,79 @@ function deleteCollection(collection_id) {
             window.location.reload();
         }
     })
+}
 
+function togglePassword() {
+    var passwordInput = document.getElementById("password");
+    var eyeIcon = document.getElementById("eye-icon");
+
+    if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        eyeIcon.classList.remove("fa-eye-slash");
+        eyeIcon.classList.add("fa-eye");
+    } else {
+        passwordInput.type = "password";
+        eyeIcon.classList.remove("fa-eye");
+        eyeIcon.classList.add("fa-eye-slash");
+    }
+}
+
+function toggleVerifyPassword() {
+    var passwordInput = document.getElementById("verify_password");
+    var eyeIcon = document.getElementById("eye-icon-verify");
+
+    if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        eyeIcon.classList.remove("fa-eye-slash");
+        eyeIcon.classList.add("fa-eye");
+    } else {
+        passwordInput.type = "password";
+        eyeIcon.classList.remove("fa-eye");
+        eyeIcon.classList.add("fa-eye-slash");
+    }
+}
+
+function listen_continue_forgot() {
+    event.preventDefault();
+
+    var username_give = $("#username").val();
+    var password_give = $("#password").val();
+    var verify_password = $("#verify_password").val();
+
+    // Check if username, password, or verify password fields are empty
+    $("#id-taken").empty()
+    if (password_give === "") {
+        $("#password-checker").text('Please fill the password field');
+        return;
+    }
+    $("#password-checker").empty()
+    if (verify_password === "") {
+        $("#password-same").text('Please verify your password');
+        return;
+    }
+
+    // Verify password
+    if (password_give !== verify_password) {
+        $("#password-same").text('Password not the same');
+        return;
+    }
+
+    $.ajax({
+        url: '/api/forgotpw',
+        method: 'POST',
+        data: {
+            "username_give": username_give,
+            "password_give": password_give
+        },
+        success: function (response) {
+            // If sign-up is successful, redirect to login page or do other actions
+            window.location.href = '/login';
+        },
+        error: function (xhr, status, error) {
+            var errorMessage = xhr.responseJSON.msg;
+            $("#error-message").text(errorMessage);
+        }
+    });
 }
 function toggleDropdown() {
     var dropdownMenu = document.getElementById('dropdown-menu3');
