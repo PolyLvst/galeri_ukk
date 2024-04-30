@@ -1,3 +1,4 @@
+import subprocess
 from flask import Flask,jsonify,request
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
@@ -28,7 +29,16 @@ def check_folders():
 
 @app.route("/")
 def home():
-    return jsonify({"msg":"Still awake"})
+    home_dir = os.path.expanduser('~')
+    # Define the command to run
+    command = ['du', '-sh', home_dir]
+
+    # Execute the command and capture the output
+    output = subprocess.check_output(command)
+
+    # Decode the output from bytes to string and print
+    used = output.decode('utf-8')
+    return jsonify({"msg":"Still awake","used":used})
 
 @app.route("/api/images/save",methods=["POST"])
 def save_image():

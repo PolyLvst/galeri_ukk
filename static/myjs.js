@@ -319,6 +319,9 @@ function search_images() {
                 let tempHtmlModals = `
                 <div id="modal-image-${results[idx]["_id"]}" class="modal modal-fx-superScaled">
                     <div class="modal-background">
+                        <div id="dropup-area-collection">
+                            <!-- Dropup message change collection -->
+                        </div>
                         <div class="mx-4 column box bottom-content has-text-centered">
                             <span class="icon" id="bookmark-icon-modals-fullscreen-${results[idx]["_id"]}") onclick="toggleBookmark('${results[idx]["_id"]}')"">
                 `;
@@ -437,12 +440,13 @@ function upload_button() {
         processData: false,
         contentType: false,
         data: form_data,
-        success: function (response, textStatus, xhr) {
-            if (xhr.status == 200) {
-                window.location.reload();
-            } else {
-                alert('Something went wrong ' + response["msg"]);
-            }
+        success: function (response) {
+            window.location.reload();
+        },
+        error: function (xhr, status, error) {
+            var errorMessage = xhr.responseJSON.msg;
+            alert(errorMessage);
+            buttonSaveUpload.empty();
         }
     })
 }
@@ -472,6 +476,11 @@ function save_user_info_button() {
             } else {
                 alert('Something went wrong ' + response["msg"]);
             }
+        },
+        error: function (xhr, status, error) {
+            var errorMessage = xhr.responseJSON.msg;
+            alert(errorMessage);
+            buttonSaveUpload.empty();
         }
     })
 }

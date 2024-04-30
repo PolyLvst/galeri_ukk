@@ -15,6 +15,7 @@ import hashlib
 import secrets
 import jwt
 import os
+import json
 
 load_dotenv(override=True)
 
@@ -26,9 +27,11 @@ TOKEN = 'token'
 
 IMAGES_THUMBNAIL_SIZE = (300,300)
 image_maxsize = 1 #Mb
+image_upload_maxsize = 15 * 1024 * 1024 # 15 Mb
 
-# using an access token
+# Storage Url
 StorageURL = os.environ.get("StorageURL")# "http://localhost:5500/"
+MaxStorageCapacity = 170 # Mb (leave 29 Mb for server data, total available 199 Mb)
 # Default foto profil untuk user
 default_profile_pic = "../static/defaults/default-profile-pic.png"
 
@@ -72,6 +75,29 @@ def limit_image_size(image_path, max_size_mb=1):
     resized_image.save(image_path)
     return True
 
+# Check if storage is available
+def is_available_storage():
+    # Check if the storage is full
+    check = requests.get(url=StorageURL)
+    # Parse
+    data = json.loads(check.text)
+    # Extract the disk usage value
+    usage_str = data["used"]  # "91M\t/app\n"
+    # Remove any non-numeric characters
+    usage_str_clean = ''.join(filter(str.isdigit, usage_str))  # "91"
+    print("Available storage : "+usage_str_clean+" Mb")
+    if int(usage_str_clean) > MaxStorageCapacity:
+        print("## STORAGE IS FULL ##")
+        return False
+    return True
+
+def is_bigger_than_upload_maxsize(req):
+    if req.content_length is not None and req.content_length > image_upload_maxsize:
+        # Image is bigger than upload maxsize
+        return True
+    # Image is smaller than upload maxsize
+    return False
+
 # Upload file ke storage atau update
 def upload_file_to_storage(file_path_static:str,content:str,token:str):
     # File path static contohnya bisa photos atau profile_pics
@@ -83,20 +109,20 @@ def upload_file_to_storage(file_path_static:str,content:str,token:str):
         cookies={"token": token}
     )
     if response.status_code != 200:
-        print(f"Something went wrong : {response.status_code} | {response.text} | Cookie {token}")
+        print("Something went wrong : "+response.status_code+" | "+response.text+" | Cookie "+token)
         raise Exception
 
 # Delete file dari storage
 def delete_file_from_storage(file_path_repo:str,token:str):
     # File path static contohnya bisa photos atau profile_pics
     ApiStorage = StorageURL+"api/images/delete"
-    response = requests.post(
+    response = requests.delete(
         url=ApiStorage,
         data={"file_path":file_path_repo},
         cookies={"token": token}
     )
     if response.status_code != 200:
-        print(f"Something went wrong : {response.status_code} | {response.text} | Cookie {token}")
+        print("Something went wrong : "+response.status_code+" | "+response.text+" | Cookie "+token)
         raise Exception
 
 # Generate thumbnail
@@ -108,7 +134,7 @@ def generate_thumbnail(input_image_path, output_thumbnail_path, thumbnail_size=(
         image.thumbnail(thumbnail_size)
         # Save the thumbnail to the output path
         image.save(output_thumbnail_path)
-        print(f"Thumbnail generated and saved to '{output_thumbnail_path}'")
+        print("Thumbnail generated and saved to "+output_thumbnail_path)
     except Exception as e:
         print("Error generating thumbnail:", e)
 
@@ -148,10 +174,10 @@ def check_superadmin():
             "is_superadmin": True,
         }
         table_users.insert_one(doc)
-        print(f"# ------------------ #")
-        print(f"# Generated superadmin")
-        print(f"# User : helios-ruler")
-        print(f"# Password : {pw}")
+        print("# ------------------ #")
+        print("# Generated superadmin")
+        print("# User : helios-ruler")
+        print("# Password : "+pw)
 
 def get_pagination_count(items_per_page=20,page=1,total_items=1):
     # total_items = table_photos.count_documents({"username":username})  # Total number of items in the collection
@@ -230,7 +256,7 @@ def mask_long_string(original_string:str,max_length:int=17):
 
 # -------------- ENDPOINT -------------- #
 
-@app.get("/")
+@app.route("/",methods=["GET"])
 def home():
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
@@ -261,7 +287,7 @@ def home():
 
     if query != '':
         # Untuk tombol navigasi bawah
-        args_nav = f'{args_nav}query={query}'
+        args_nav = args_nav+"query="+query
         results = search_images_query(query=query)
         total_items = len(results)  # Total number of items in the collection
         
@@ -272,7 +298,7 @@ def home():
         photos = results[skip:limit]
     elif collection != '':
         # Untuk tombol navigasi bawah
-        args_nav = f'{args_nav}collection={collection}'
+        args_nav = args_nav+"collection="+collection
         bookmarks_list = list(table_bookmarks.find({"collection_id":collection}).sort("_id",-1))
         total_items = len(bookmarks_list)
         skip,prev_page,next_page,end_page = get_pagination_count(items_per_page=per_page,page=page,total_items=total_items)
@@ -305,7 +331,7 @@ def home():
                            args_nav=args_nav,
                            query=query)
 
-@app.get("/detail/<post_id>")
+@app.route("/detail/<post_id>",methods=["GET"])
 def get_detail_page(post_id=None):
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
@@ -342,7 +368,7 @@ def get_detail_page(post_id=None):
                            comments=comments,
                            from_page=from_page)
 
-@app.post("/api/comment/create")
+@app.route("/api/comment/create",methods=["POST"])
 def create_comment():
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
@@ -377,7 +403,7 @@ def create_comment():
     table_comments.insert_one(doc)
     return jsonify({"msg":"Comment added","status":"created"})
 
-@app.delete("/api/comment/delete")
+@app.route("/api/comment/delete",methods=["DELETE"])
 def delete_comment():
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
@@ -413,7 +439,7 @@ def delete_comment():
     table_comments.delete_one({"_id":ObjectId(comment_id_receive)})
     return jsonify({"msg":"Item deleted","status":"deleted"})
 
-@app.get("/api/bookmarks")
+@app.route("/api/bookmarks",methods=["GET"])
 def bookmarks():
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
@@ -439,7 +465,7 @@ def bookmarks():
     return jsonify({"data":bookmarks})
     # return render_template('bookmarks.html')
 
-@app.get("/api/collections")
+@app.route("/api/collections",methods=["GET"])
 def get_my_collections():
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
@@ -470,7 +496,7 @@ def get_my_collections():
         idx += 1
     return jsonify({"data":collections,"collection_choosed":collection_choosed})
 
-@app.post("/api/collection/create")
+@app.route("/api/collection/create",methods=["POST"])
 def create_collection():
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
@@ -509,7 +535,7 @@ def create_collection():
     table_saved_collection.insert_one(doc)
     return jsonify({"msg":"Collection saved","status":"created"})
 
-@app.put("/api/collection/select")
+@app.route("/api/collection/select",methods=["PUT"])
 def update_collection_choose():
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
@@ -540,7 +566,7 @@ def update_collection_choose():
     table_users.update_one({"username":username},{"$set":update_collection_choose})
     return jsonify({"msg":"Collection choosed","status":"updated"})
 
-@app.delete("/api/collection/delete")
+@app.route("/api/collection/delete",methods=["DELETE"])
 def delete_collection():
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
@@ -570,7 +596,7 @@ def delete_collection():
     table_saved_collection.delete_one({"username":username,"collection_name":collection_exist.get('collection_name')})
     return jsonify({"msg":"Collection deleted","status":"deleted"})
 
-@app.post("/api/bookmark")
+@app.route("/api/bookmark",methods=["POST"])
 def update_bookmark():
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
@@ -614,7 +640,7 @@ def update_bookmark():
     table_bookmarks.insert_one(doc)
     return jsonify({"msg":"Bookmarked","status":"created"})
 
-@app.post("/api/like")
+@app.route("/api/like",methods=["POST"])
 def update_like():
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
@@ -647,7 +673,7 @@ def update_like():
     table_liked.insert_one(doc)
     return jsonify({"msg":"Liked","status":"created"})
 
-@app.get("/bookmarks")
+@app.route("/bookmarks",methods=["GET"])
 def bookmarks_page():
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
@@ -703,7 +729,7 @@ def bookmarks_page():
                         current_username=username,
                         user_choose_collection=user_choose_collection.get('choose_collection'))
 
-@app.get("/api/search")
+@app.route("/api/search",methods=["GET"])
 def search():
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
@@ -730,7 +756,7 @@ def search():
     per_page = request.args.get('per_page', default=items_per_page, type=int) # Number of items per page
     args_nav = "%26" # &
     # Untuk tombol navigasi bawah
-    args_nav = f'{args_nav}query={query}'
+    args_nav = args_nav+"query="+query
 
     results = search_images_query(query=query)
     
@@ -757,7 +783,7 @@ def search():
                     "end_page":end_page,
                     "args_nav":args_nav})
 
-@app.get("/blog")
+@app.route("/blog",methods=["GET"])
 def blog():
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
@@ -801,7 +827,7 @@ def blog():
                            next_page=next_page,
                            end_page=end_page)
 
-@app.get("/user/<user_name>")
+@app.route("/user/<user_name>",methods=["GET"])
 def user_gallery(user_name):
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
@@ -847,7 +873,7 @@ def user_gallery(user_name):
                            next_page=next_page,
                            end_page=end_page)
 
-@app.get("/my-gallery")
+@app.route("/my-gallery",methods=["GET"])
 def gallery_page():
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
@@ -891,7 +917,7 @@ def gallery_page():
                            next_page=next_page,
                            end_page=end_page)
 
-@app.get("/about")
+@app.route("/about",methods=["GET"])
 def about_page():
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
@@ -914,7 +940,7 @@ def about_page():
     return render_template("about.html",current_username=username)
 
 # Get info dari token tentang user
-@app.get("/api/me")
+@app.route("/api/me",methods=["GET"])
 def get_info_me():
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
@@ -939,7 +965,7 @@ def get_info_me():
     return jsonify({"data":user})
     
 # Endpoint ambil path images
-@app.get("/api/images") # Optional args skip and limit, contoh : /api/images?skip=0&limit=10
+@app.route("/api/images",methods=["GET"]) # Optional args skip and limit, contoh : /api/images?skip=0&limit=10
 def get_images():
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
@@ -980,7 +1006,7 @@ def get_images():
         'next_page': next_page})
 
 # Endpoint ambil path images by me
-@app.get("/api/images/me") # Optional args skip and limit, contoh : /api/images?skip=0&limit=10
+@app.route("/api/images/me",methods=["GET"]) # Optional args skip and limit, contoh : /api/images?skip=0&limit=10
 def get_images_me():
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
@@ -1010,7 +1036,7 @@ def get_images_me():
     return jsonify({"data":photos})
 
 # Endpoint tambah foto
-@app.post("/api/images/create")
+@app.route("/api/images/create",methods=["POST"])
 def create_images():
     # Ambil cookie file
     token_receive = request.cookies.get(TOKEN)
@@ -1036,18 +1062,25 @@ def create_images():
         extension = os.path.splitext(filename)[-1].replace('.','')
         if not check_ext(extension):
             return jsonify({"msg":"Extension not allowed"}),406 # Not acceptable
-        unique_format = f"{username}-{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}.{extension}"
-        file_path = f"photos/{unique_format}"
-        file_save_path = f"./static/temp/{file_path}"
+        unique_format = username+"-"+datetime.now().strftime('%d-%m-%Y_%H-%M-%S')+"."+extension
+        file_path = "photos/"+unique_format
+        file_save_path = "./static/temp/"+file_path
+
+        # is_full_capacity
+        if not is_available_storage():
+            return jsonify({"msg":"Storage is full"}), 507 # Insufficient Storage
+        
+        if is_bigger_than_upload_maxsize(request) :  # Max size reached
+            return jsonify({"msg": "File size exceeds upload limit"}), 400
 
         # Simpan file ke folder temp
         file.save(file_save_path)
         limit_image_size(file_save_path,image_maxsize)
 
         # Thumbnail
-        thumbnail_unique_format = f"thumbnail_{unique_format}"
-        thumbnail_path = f"photos/{thumbnail_unique_format}"
-        file_save_path_thumbnail = f"./static/temp/{thumbnail_path}"
+        thumbnail_unique_format = "thumbnail_"+unique_format
+        thumbnail_path = "photos/"+thumbnail_unique_format
+        file_save_path_thumbnail = "./static/temp/"+thumbnail_path
         generate_thumbnail(input_image_path=file_save_path,output_thumbnail_path=file_save_path_thumbnail,thumbnail_size=IMAGES_THUMBNAIL_SIZE)
         
         # Upload ke storage
@@ -1078,7 +1111,7 @@ def create_images():
         return {"msg":"No image uploaded"},404 # Not found
 
 # Endpoint delete foto
-@app.delete("/api/images/delete")
+@app.route("/api/images/delete",methods=["DELETE"])
 def delete_images():
     # Ambil cookie file
     token_receive = request.cookies.get(TOKEN)
@@ -1120,7 +1153,7 @@ def delete_images():
     return jsonify({"msg":"Image deleted"})
 
 # Endpoint update foto profil, about, bio
-@app.put("/api/me")
+@app.route("/api/me",methods=["PUT"])
 def update_user_me():
     # Ambil cookie
     token_receive = request.cookies.get(TOKEN)
@@ -1152,13 +1185,20 @@ def update_user_me():
         if not check_ext(extension):
             return jsonify({"msg":"Extension not allowed"}),406 # Not acceptable
         
+        # is_full_capacity
+        if not is_available_storage():
+            return jsonify({"msg":"Storage is full"}), 507 # Insufficient Storage
+        
+        if is_bigger_than_upload_maxsize(request) :  # Max size reached
+            return jsonify({"msg": "File size exceeds upload limit"}), 400
+        
         # Get current user profile pic
         current_data = table_users.find_one({"username":username},{"_id":False})
         current_data_profile_pic = current_data.get("profile_pic_repo")
         
-        unique_format = f"{username}-{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}.{extension}"
-        file_path = f"profile_pics/mini_{unique_format}"
-        file_save_path = f"./static/temp/{file_path}"
+        unique_format = username+"-"+datetime.now().strftime('%d-%m-%Y_%H-%M-%S')+"."+extension
+        file_path = "profile_pics/mini_"+unique_format
+        file_save_path = "./static/temp/"+file_path
         # Simpan file ke folder temp
         file.save(file_save_path)
 
@@ -1192,22 +1232,22 @@ def update_user_me():
     return {"msg":"Photo uploaded. Items updated"}
 
 # Login page
-@app.get("/login")
+@app.route("/login",methods=["GET"])
 def login_fn():
     msg = request.args.get("msg")
     return render_template("login.html", msg=msg)
 
 # Login page
-@app.get("/daftar")
+@app.route("/daftar",methods=["GET"])
 def daftar_fn():
     return render_template("daftar.html")
 
-@app.get("/forgotpw")
+@app.route("/forgotpw",methods=["GET"])
 def forgotpw_fn():
     return render_template("lupapw.html")
 
 # Endpoint registrasi
-@app.post('/api/sign_up')
+@app.route('/api/sign_up',methods=["POST"])
 def sign_up():
     username_receive = request.form.get('username_give')
     password_receive = request.form.get('password_give')
@@ -1237,7 +1277,7 @@ def sign_up():
     return jsonify({'result':'success'})
 
 # Sign in untuk mendapat token JWT
-@app.post("/api/sign_in")
+@app.route("/api/sign_in",methods=["POST"])
 def sign_in():
     username_receive = request.form.get('username_give','')
     password_receive = request.form.get('password_give','')
@@ -1276,7 +1316,7 @@ def sign_in():
     token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
     return jsonify({"result": "success","token": token})
 
-@app.post('/api/check_username')
+@app.route('/api/check_username',methods=["POST"])
 def check_username():
     username_receive = request.form.get('username_give')
     
@@ -1287,8 +1327,9 @@ def check_username():
     
     return jsonify({'available': True}), 200  # Username is available
 
-@app.post('/api/forgotpw')
+@app.route('/api/forgotpw',methods=["POST"])
 def forgot_password():
+    return jsonify({"msg":"Under construction"}), 503
     username_receive = request.form.get('username_give')
     password_receive = request.form.get('password_give')
 
@@ -1305,5 +1346,5 @@ if __name__ == "__main__":
     check_superadmin()
     # Cek apakah folder tersedia
     check_folders()
-    # app.run("localhost",5000,True)
-    app.run("0.0.0.0",5000,True)
+    app.run("localhost",5000,True)
+    # app.run("0.0.0.0",5000,True)
