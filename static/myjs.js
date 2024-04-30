@@ -461,6 +461,29 @@ function save_user_info_button() {
         }
     })
 }
+function save_collection_button() {
+    const buttonSaveUpload = $("#button-save-collection");
+    buttonSaveUpload.empty();
+    buttonSaveUpload.append(`<progress class="progress is-small is-link my-3" max="100">Uploading</progress>`);
+    let collectionName = $("#collection-name-new").val();
+    let chooseCollectionNew = $("#collection-choose-new").prop('checked');
+    $.ajax({
+        type: 'POST',
+        url: '/api/collection/create',
+        data: {
+            "collection_name_give": collectionName,
+            "choose_created_collection": chooseCollectionNew
+        },
+        success: function (response, textStatus, xhr) {
+            if (xhr.status == 200) {
+                // Reload the page
+                window.location.reload();
+            } else {
+                alert('Something went wrong ' + response["msg"]);
+            }
+        }
+    })
+}
 function getSelectedTags() {
     let selectedTags = [];
     $('.tags-list-unique.is-success').each(function () {
@@ -545,13 +568,14 @@ function toggleBookmark(id) {
         type: "POST",
         data: {
             "post_id_give": id,
-            "collection_id_give": "65ffb738b96613c66b748e1b"
         },
         success: function (response) {
             bookmarkIcon.empty();
             if (response["status"] == "created") {
+                messageChangeCollection(id);
                 bookmarkIcon.append(`<i class="fa-solid fa-bookmark has-text-link"></i>`);
             } else {
+                // resetChangeCollection(); Beri waktu user agar bisa merubah pikiran
                 bookmarkIcon.append(`<i class="fa-regular fa-bookmark"></i>`);
             }
         }
@@ -573,9 +597,25 @@ function deleteImage(id) {
         }
     })
 }
-// function changeBookmarkCollection() {
-
-// }
+function changeBookmarkCollection(collection_id) {
+    const boxIconSelect = $('#icon-box-' + collection_id);
+    boxIconSelect.empty();
+    boxIconSelect.append(`<i class="fas fa-spinner fa-spin"></i>`);
+    $.ajax({
+        url: "/api/collection/select",
+        type: "PUT",
+        data: {
+            "collection_id_give": collection_id,
+        },
+        success: function (response) {
+            if (response["status"] == "updated") {
+                window.location.reload();
+            } else {
+                alert('Something went wrong ' + response["msg"]);
+            }
+        }
+    })
+}
 function uploadComment(post_id = '') {
     let commentInput = $("#input-text-area-comment");
     let commentGive = commentInput.val();
@@ -672,7 +712,15 @@ function from_page_backtrack_listener() {
         }
     }
 }
-
+function GoBackRefresh(event) {
+    if ('referrer' in document) {
+        window.location = document.referrer;
+        /* OR */
+        //location.replace(document.referrer);
+    } else {
+        window.history.back();
+    }
+}
 function from_sidebar_user_edit() {
     var hash = window.location.hash; // Ambil value pagar contoh = localhost:5000/#modal-image-112233
     if (hash && hash.startsWith('#modal-edit-info')) {
@@ -682,4 +730,151 @@ function from_sidebar_user_edit() {
             modal.addClass('is-active'); // Add a class to show the modal
         }
     }
+}
+function deleteCollection(collection_id) {
+    const deleteIcon = $('#icon-delete-collection-' + collection_id);
+    console.log('#icon-delete-collection-' + collection_id);
+    deleteIcon.empty();
+    deleteIcon.append(`<i class="fas fa-spinner fa-spin"></i>`);
+    $.ajax({
+        url: "/api/collection/delete",
+        type: "DELETE",
+        data: {
+            "collection_id_give": collection_id,
+        },
+        success: function (response) {
+            window.location.reload();
+        }
+    })
+
+}
+
+// Bookmark popup collection chooser
+var popupTimer;
+var countdownInterval;
+
+function boxDropupCollectionListener() {
+    event.stopPropagation();
+    const messageBox = $('div#dropup-area-collection');
+    const boxDropup = $('div#box-dropup-collection');
+    var timerElement = $('span#countdown-dropup');
+    if (boxDropup.hasClass('is-active')) {
+        showTimeCountdown();
+        popupTimer = setTimeout(function () {
+            messageBox.empty();
+        }, 5000); // 5 Detik
+        boxDropup.removeClass('is-active');
+    } else {
+        clearInterval(countdownInterval);
+        timerElement.empty();
+        clearTimeout(popupTimer);
+        boxDropup.addClass('is-active');
+    }
+}
+function showTimeCountdown() {
+    // Set the target time (in milliseconds)
+    var targetTime = Date.now() + 5000; // 5 seconds from now
+    var timerElement = $('span#countdown-dropup');
+
+    // Update the countdown every second
+    countdownInterval = setInterval(function () {
+        // Calculate the remaining time
+        var currentTime = Date.now();
+        var remainingTime = targetTime - currentTime;
+
+        // Check if the countdown is finished
+        if (remainingTime <= 0) {
+            clearInterval(countdownInterval); // Stop the countdown
+            timerElement.empty();
+            return;
+        }
+
+        // Format the remaining time (e.g., MM:SS)
+        // var minutes = Math.floor(remainingTime / 60000);
+        var seconds = Math.ceil((remainingTime % 60000) / 1000);
+        // var formattedTime = minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
+        var formattedTime = seconds.toString();
+
+        // Update the timer element with the formatted time
+        timerElement.text(formattedTime);
+    }, 1000); // Update every second
+}
+function resetChangeCollection() {
+    // Reset for new post opened
+    const messageBox = $('div#dropup-area-collection');
+    messageBox.empty();
+    var timerElement = $('span#countdown-dropup');
+    clearInterval(countdownInterval);
+    timerElement.empty();
+    clearTimeout(popupTimer);
+}
+function messageChangeCollection() {
+    const messageBox = $('div#dropup-area-collection');
+    // Reset for new post opened
+    resetChangeCollection();
+    $.ajax({
+        url: "/api/collections",
+        type: "GET",
+        data: {},
+        success: function (response) {
+            let data = response["data"];
+            let collection_choosed = response["collection_choosed"];
+            let collections_html = `
+            <div class="bottom-content-notification">
+                <!--  add is-hoverable class if you want some hover action -->
+                <div class="box dropdown has-background-success is-right is-up has-text-black py-3"
+                    id="box-dropup-collection" onclick="event.stopPropagation()">
+                    <div class="dropdown-trigger" onclick="boxDropupCollectionListener()">
+                        <span class="icon-text">
+                            <span id="countdown-dropup"></span>
+                            <span class="icon">
+                                <i class="fa-solid fa-bookmark"></i>
+                            </span>
+                            <span>${collection_choosed}</span>
+                            <span class="icon is-small mt-1">
+                                <i class="fas fa-angle-up" aria-hidden="true"></i>
+                            </span>
+                        </span>
+                    </div>
+                    <div class="dropdown-menu mt-1" id="dropdown-menu4" role="menu">
+                        <div class="dropdown-content">
+                            <div class="dropdown-item">
+            `;
+            for (collection in data){
+                collections_html+=`
+                <span class="icon-text">
+                `;
+                if (collection_choosed == data[collection]['collection_name']){
+                    collections_html+=`
+                    <span class="icon has-text-success">
+                        <i class="fa-solid fa-square-check"></i>
+                    </span>
+                    <span>${data[collection]['collection_name']}</span>
+                </span>
+                </br>`;
+                } else {
+                    collections_html+=`
+                    <span class="icon has-text-gray" onclick="changeBookmarkCollection('${data[collection]['_id']}')" id="icon-box-${data[collection]['_id']}">
+                        <i class="fa-regular fa-square"></i>
+                    </span>
+                    <span onclick="changeBookmarkCollection('${data[collection]['_id']}')">${data[collection]['collection_name']}</span>
+                </span>
+                </br>`;
+                }   
+            }
+            collections_html+=`
+                                <a href="/bookmarks">...</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `;
+            messageBox.append(collections_html);
+            showTimeCountdown();
+            popupTimer = setTimeout(function () {
+                messageBox.empty();
+            }, 5000);
+        }
+    })
 }
