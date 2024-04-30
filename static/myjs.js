@@ -319,6 +319,9 @@ function search_images() {
                 let tempHtmlModals = `
                 <div id="modal-image-${results[idx]["_id"]}" class="modal modal-fx-superScaled">
                     <div class="modal-background">
+                        <div id="dropup-area-collection">
+                            <!-- Dropup message change collection -->
+                        </div>
                         <div class="mx-4 column box bottom-content has-text-centered">
                             <span class="icon" id="bookmark-icon-modals-fullscreen-${results[idx]["_id"]}") onclick="toggleBookmark('${results[idx]["_id"]}')"">
                 `;

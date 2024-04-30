@@ -1289,6 +1289,7 @@ def check_username():
 
 @app.post('/api/forgotpw')
 def forgot_password():
+    return jsonify({"msg":"Under construction"}), 503
     username_receive = request.form.get('username_give')
     password_receive = request.form.get('password_give')
 
@@ -1305,5 +1306,5 @@ if __name__ == "__main__":
     check_superadmin()
     # Cek apakah folder tersedia
     check_folders()
-    # app.run("localhost",5000,True)
-    app.run("0.0.0.0",5000,True)
+    app.run("localhost",5000,True)
+    # app.run("0.0.0.0",5000,True)
