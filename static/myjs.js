@@ -748,6 +748,10 @@ function deleteCollection(collection_id) {
     })
 
 }
+function toggleDropdown() {
+    var dropdownMenu = document.getElementById('dropdown-menu3');
+    dropdownMenu.classList.toggle('show');
+ }
 
 // Bookmark popup collection chooser
 var popupTimer;

@@ -253,6 +253,7 @@ def home():
     items_per_page_home = 20
 
     page = request.args.get('page', default=1, type=int)
+    sortmode = request.args.get('sort', default=-1, type=int)
     per_page = request.args.get('per_page', default=items_per_page_home, type=int) # Number of items per page
     query = request.args.get('query', '')
     collection = request.args.get('collection', '')
@@ -287,7 +288,7 @@ def home():
         skip,prev_page,next_page,end_page = get_pagination_count(items_per_page=per_page,page=page,total_items=total_items)
 
         # Sort dari id terbaru (-1) jika (1) maka dari yang terdahulu
-        photos = list(table_photos.find({}).sort("_id",-1).skip(skip=skip).limit(limit=per_page))        
+        photos = list(table_photos.find({}).sort("_id",sortmode).skip(skip=skip).limit(limit=per_page))
     photos = images_social(posts=photos,username=username)
     idx = 0
     for doc in photos:
