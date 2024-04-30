@@ -168,7 +168,7 @@
 
                 {% for kategori in photo['kategori'].split(',') %}
                 {% if kategori %}
-                <a>#{{ kategori }} </a>
+                <a href="/?query={{ kategori }}">#{{ kategori }} </a>
                 {% endif %}
                 {% endfor %}
                 <br />
